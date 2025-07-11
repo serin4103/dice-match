@@ -1,0 +1,13 @@
+.timerContainer {
+    width: 90%;
+    height: 2rem;
+    background-color: #e6e6e6;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.timerFill {
+    height: 100%;
+    background-color: #FFCE8E;
+    transition: width 0.1s linear;
+}

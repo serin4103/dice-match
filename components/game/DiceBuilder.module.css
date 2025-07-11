@@ -1,0 +1,79 @@
+.diceBuilderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.diceBuilderContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+  
+.diceNet {
+    position: relative;
+    width: 380px;
+    height: 285px;
+}
+  
+.diceFace {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    text-align: center;
+    font-size: 20px;
+    border: 2px solid #353535;
+    border-radius: 10px;
+    /* 화살표 숨기기 */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+/* Chrome, Safari, Edge */
+.diceFace::-webkit-outer-spin-button,
+.diceFace::-webkit-inner-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+.diceFace[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+  
+/* 전개도 위치 (여백 5px씩 추가) */
+.face0 { top: 0; left: 170px; }
+.face1 { top: 85px; left: 0; }
+.face2 { top: 85px; left: 85px; } 
+.face3 { top: 85px; left: 170px; }
+.face4 { top: 85px; left: 255px; }
+.face5 { top: 170px; left: 170px; }
+
+.diceSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.diceSummary p {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.diceSummary button {
+    padding: 8px 16px;
+    width: 100px;
+    height: 50px;
+    background-color: white;
+    color: #353535;
+    border: 2px solid #353535;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
