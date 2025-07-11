@@ -1,10 +1,13 @@
 import React from "react";
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
+  console.log("세션 상태:", status, session);
 
   return (
     <div style={{
@@ -18,18 +21,36 @@ export default function Home() {
       transition: "background-color 0.3s"
     }}>
       {/* 오른쪽 위 로그인 버튼 */}
-      <button
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 20,
-          padding: "8px 16px",
-          cursor: "pointer"
-        }}
-        onClick={() => alert("로그인 기능 준비 중입니다")}
-      >
-        로그인
-      </button>
+      <>
+      {session ? (
+        <button
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            padding: "8px 16px",
+            cursor: "pointer",
+          }}
+          onClick={() => signOut()}
+        >
+          로그아웃
+        </button>
+      ) : (
+        <button
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            padding: "8px 16px",
+            cursor: "pointer",
+          }}
+          onClick={() => signIn("google")}
+        >
+          로그인
+        </button>
+      )}
+      {/* 기존 UI 나머지 계속 유지 */}
+    </>
 
       {/* 로고 (여기선 텍스트로 대체) */}
       <h1 style={{ fontSize: 48, marginBottom: 40 }}>Dice Match</h1>
