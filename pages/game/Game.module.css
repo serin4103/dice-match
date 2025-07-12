@@ -1,0 +1,14 @@
+.gameContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 90vh;
+}
+
+.gameLeft .gameRight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}

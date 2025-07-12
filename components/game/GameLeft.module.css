@@ -21,3 +21,26 @@
     height: 100%;
     pointer-events: none;
 }
+
+.pawn {
+    position: absolute;
+    width: 10%;
+    height: 10%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    border: 2px solid #333;
+    transition: all 0.3s ease;
+}
+
+.pawn:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.pawn.blue {
+    background-color: #8CC6DD;
+}
+
+.pawn.red {
+    background-color: #FB836A;
+}

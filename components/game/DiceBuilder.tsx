@@ -1,17 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Timer from "./Timer";
+import { DiceBuilderProps } from "@/types/game";
 import styles from "./DiceBuilder.module.css";
 
-const MAXSUM = 18;
-
-interface DiceBuilderProps {
-    duration: number; // seconds
-    buildDice: (faces: number[]) => void;
-}
-
 export default function DiceBuilder({
+    turn,
     duration,
     buildDice,
+    maxSum,
 }: DiceBuilderProps) {
     const [faces, setFaces] = useState<(number | "")[]>([
         "",
@@ -21,85 +17,110 @@ export default function DiceBuilder({
         "",
         "",
     ]);
+    const [diceReady, setDiceReady] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [timerKey, setTimerKey] = useState(0); // 타이머를 리셋하기 위한 키
+
+    // turn이 null이 되면 상태 초기화
+    useEffect(() => {
+        if (turn === null) {
+            setFaces(["", "", "", "", "", ""]);
+            setDiceReady(false);
+            setErrorMessage("");
+            setTimerKey(prev => prev + 1); // 타이머 컴포넌트를 리마운트하여 리셋
+        }
+    }, [turn]);
 
     const sum = faces.reduce((acc: number, val) => {
         return acc + (typeof val === "number" ? val : 0);
     }, 0) as number;
 
     const handleSubmit = useCallback(() => {
-        if (sum <= MAXSUM && faces.every((f) => f !== "")) {
+        if (sum <= maxSum && faces.every((f) => f !== "")) {
+            setDiceReady(true);
             buildDice(faces as number[]);
         } else {
-            alert(
-                "총합이 18 이하가 되도록 모든 면에 0~5 사이의 숫자를 입력하세요"
+            setErrorMessage(
+                `총합이 ${maxSum} 이하가 되도록 모든 면에 0~5 사이의 숫자를 입력하세요`
             );
         }
-    }, [faces, sum, buildDice]);
+    }, [faces, sum, buildDice, maxSum]);
 
     const handleChange = (value: string, idx: number) => {
         const num = parseInt(value, 10);
-        if (value === "" || (num >= 0 && num <= 5)) {
+        const newSum = sum + (value === "" ? 0 : num);
+        if (newSum > maxSum) {
+            setErrorMessage(
+                `총합이 ${maxSum} 이하가 되도록 모든 면에 0~5 사이의 숫자를 입력하세요`
+            );
+        } else if (value === "" || (num >= 0 && num <= 5)) {
             const updated = [...faces];
             updated[idx] = value === "" ? "" : num;
             setFaces(updated);
+            setErrorMessage("");
         }
     };
 
     const handleTimeUp = () => {
-        if (sum <= MAXSUM && faces.every((f) => f !== "")) {
-            buildDice(faces as number[]);
+        if (diceReady) return; // 이미 완료된 경우 중복 실행 방지
+
+        let finalFaces: number[];
+
+        if (faces.some((f) => f === "")) {
+            // 자동 완성 로직
+            let currentSum = 0;
+            let randomFaces = Array.from({ length: 6 }, (_, i) => {
+                const randomFace = Math.floor(
+                    Math.random() * Math.min(5, maxSum - (6 - i) - currentSum) +
+                        1
+                );
+                currentSum += randomFace;
+                return randomFace;
+            });
+            setFaces(randomFaces);
+            finalFaces = randomFaces; // 새로 생성된 값 사용
+        } else {
+            finalFaces = faces as number[]; // 기존 값 사용
         }
-        else {
-            let filled: number[] = [...faces].map((f) =>
-                typeof f === "number" ? f : 0
-            );
 
-            // Fill empty slots with random numbers 1-5
-            for (let i = 0; i < filled.length; i++) {
-                if (filled[i] === 0) {
-                    filled[i] = 1;
-                }
-            }
-
-            // Adjust to ensure total sum is <= 18
-            let currentSum = filled.reduce((a, b) => a + b, 0);
-            while (currentSum > 18) {
-                const i = Math.floor(Math.random() * filled.length);
-                if (filled[i] > 1) {
-                    filled[i]--;
-                    currentSum--;
-                }
-            }
-
-            buildDice(filled);
-        }
-    }
+        buildDice(finalFaces); // 올바른 값으로 호출
+        setDiceReady(true); // 주사위가 완성되었음을 표시
+    };
 
     return (
         <div className={styles.diceBuilderContainer}>
-            <Timer duration={duration} onTimeUp={handleTimeUp} />
+            <Timer 
+                key={timerKey} 
+                duration={duration} 
+                onTimeUp={handleTimeUp} 
+                diceReady={diceReady}
+            />
             <div className={styles.diceBuilderContent}>
                 <div className={styles.diceNet}>
                     {faces.map((value, idx) => (
                         <input
                             key={idx}
                             type="number"
-                            min={0}
+                            min={1}
                             max={5}
                             value={value}
                             onChange={(e) => handleChange(e.target.value, idx)}
-                            className={`${styles.diceFace} ${
-                                styles[`face${idx}`]
-                            }`}
+                            className={`
+                                ${styles.diceFace} 
+                                ${styles[`face${idx}`]}
+                                ${diceReady ? styles.diceReady : ""}
+                                `}
+                            disabled={diceReady}
                         />
                     ))}
                 </div>
                 <div className={styles.diceSummary}>
                     <p>사용한 눈: {sum}</p>
-                    <p>남은 눈: {MAXSUM - sum}</p>
+                    <p>남은 눈: {maxSum - sum}</p>
                     <button onClick={handleSubmit}>완료</button>
                 </div>
             </div>
+            <div className={styles.errorMessage}>{errorMessage}</div>
         </div>
     );
 }

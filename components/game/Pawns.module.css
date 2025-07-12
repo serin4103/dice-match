@@ -1,0 +1,31 @@
+.readyPawns {
+    display: flex;
+    width: 70vh;
+    flex-direction: row-reverse;
+    align-items: right;
+    padding: 16px;
+    padding-right: 24px; /* 겹침으로 인한 잘림 방지 */
+}
+
+.pawn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #353535;
+    margin-left: -12px; /* 50% 겹침 효과 (24px의 절반) */
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pawn:first-child {
+    margin-right: 0; /* 첫 번째 pawn은 마진 없음 */
+}
+
+.blue {
+    background-color: #8CC6DD;
+}
+
+.red {
+    background-color: #FB836A;
+}
