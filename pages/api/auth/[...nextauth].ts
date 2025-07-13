@@ -1,24 +1,47 @@
+// 파일: pages/api/auth/[...nextauth].ts (혹은 app/api/auth/[...nextauth]/route.ts)
+
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { PrismaClient } from "@prisma/client";
 
-export default NextAuth({
+const prisma = new PrismaClient();
+
+export const authOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token;
+    async jwt({ token, user }) {
+      if (user) {
+        token.email = user.email;
       }
+      const existingUser = await prisma.user.findUnique({
+        where: { email: token.email! },
+      });
+      token.isRegistered = !!existingUser?.username;
+      token.win = existingUser?.win ?? 0;
+      token.lose = existingUser?.lose ?? 0;
+      token.username = existingUser?.username;
+      token.profilePicture = existingUser?.profilePicture;
       return token;
     },
-    async session(params: { session, token, user }) {
-      const { session, token } = params;
+    async session({ session, token }) {
       session.accessToken = token.accessToken;
+      session.user.email = token.email!;
+      session.user.isRegistered = token.isRegistered;
+      session.user.win = token.win;
+      session.user.lose = token.lose;
+      session.user.username = token.username;
+      session.user.profilePicture = token.profilePicture;
       return session;
     },
   },
-});
+  secret: process.env.NEXTAUTH_SECRET
+};
+
+const handler = NextAuth(authOptions);
+
+export default handler;

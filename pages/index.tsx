@@ -1,91 +1,140 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
-  console.log("세션 상태:", status, session);
+  const { data: session } = useSession();
 
   return (
-    <div style={{
-      height: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      position: "relative",
-      backgroundColor: showModal ? "rgba(0,0,0,0.5)" : "white",
-      transition: "background-color 0.3s"
-    }}>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        background: "white",
+      }}
+    >
       {/* 오른쪽 위 로그인 버튼 */}
-      <>
-      {session ? (
-        <button
+        {session ? (
+        <div
           style={{
             position: "absolute",
-            top: 20,
-            right: 20,
-            padding: "8px 16px",
-            cursor: "pointer",
+            top: 30,
+            right: 40,
+            display: "flex",
+            gap: 20, // 버튼 사이 간격(px)
           }}
-          onClick={() => signOut()}
         >
-          로그아웃
-        </button>
+          <button
+            style={{
+              fontSize: 16,
+              background: "none",
+              border: "none",
+              color: "#222",
+              cursor: "pointer",
+              padding: "8px 18px",
+              borderRadius: 6,
+              transition: "background 0.2s",
+            }}
+            onClick={() => router.push("/profile")}
+          >
+            프로필
+          </button>
+          <button
+            style={{
+              fontSize: 16,
+              background: "none",
+              border: "none",
+              color: "#222",
+              cursor: "pointer",
+              padding: "8px 18px",
+              borderRadius: 6,
+              transition: "background 0.2s",
+            }}
+            onClick={() => signOut()}
+          >
+            로그아웃
+          </button>
+        </div>
       ) : (
         <button
           style={{
             position: "absolute",
-            top: 20,
-            right: 20,
-            padding: "8px 16px",
+            top: 30,
+            right: 40,
+            fontSize: 16,
+            background: "none",
+            border: "none",
+            color: "#222",
             cursor: "pointer",
           }}
           onClick={() => signIn("google")}
         >
-          로그인
+          로그인 →
         </button>
       )}
-      {/* 기존 UI 나머지 계속 유지 */}
-    </>
 
-      {/* 로고 (여기선 텍스트로 대체) */}
-      <h1 style={{ fontSize: 48, marginBottom: 40 }}>Dice Match</h1>
+      {/* 로고 */}
+      <h1 style={{ fontSize: 40, fontWeight: 700, marginBottom: 32 }}>
+        Dice Match
+      </h1>
 
-      {/* 버튼들 */}
-      <div style={{ display: "flex", gap: 20 }}>
+      {/* 버튼들 세로 정렬 */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <button
-          style={{ padding: "12px 24px", fontSize: 18, cursor: "pointer" }}
+          style={{
+            background: "#F7D9A7",
+            border: "1px solid #e0e0e0",
+            borderRadius: 8,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+            padding: "16px 40px",
+            fontSize: 20,
+            fontWeight: 600,
+            cursor: "pointer",
+            marginBottom: 8,
+          }}
           onClick={() => router.push("/game/start")}
         >
           게임 시작
         </button>
         <button
-          style={{ padding: "12px 24px", fontSize: 18, cursor: "pointer" }}
+          style={{
+            background: "#fff",
+            border: "1.5px solid #bdbdbd",
+            borderRadius: 8,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+            padding: "16px 40px",
+            fontSize: 20,
+            fontWeight: 500,
+            cursor: "pointer",
+            color: "#222",
+          }}
           onClick={() => setShowModal(true)}
         >
           게임 설명
         </button>
       </div>
 
-      {/* 모달 */}
+      {/* 모달은 기존 코드 유지 */}
       {showModal && (
         <>
-          {/* 배경 어둡게 */}
           <div
             onClick={() => setShowModal(false)}
             style={{
               position: "fixed",
-              top: 0, left: 0, right: 0, bottom: 0,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               backgroundColor: "rgba(0,0,0,0.5)",
               zIndex: 1000,
             }}
           />
-
-          {/* 설명 박스 */}
           <div
             style={{
               position: "fixed",
