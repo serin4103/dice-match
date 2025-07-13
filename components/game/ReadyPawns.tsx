@@ -3,14 +3,14 @@ import styles from "./Pawns.module.css";
 
 export default function ReadyPawns({
     color,
-    count,
+    pawns,
     onClick,
 }: ReadyPawnsProps) {
-    const readyPawns = Array.from({ length: count }, (_, i) => (
+    const readyPawns = Array.from(pawns, p => (
         <div
-            key={`${color}${i}`}
-            className={`${styles.pawn} ${styles[color]}`}
-            style={{ zIndex: 4 - i }}
+            key={`${color}${p.index}`}
+            className={`${styles.pawn} ${styles.ready} ${styles[color]}`}
+            style={{ zIndex: 4 - p.index }}
         />
     ));
 

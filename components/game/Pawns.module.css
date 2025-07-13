@@ -1,6 +1,7 @@
 .readyPawns {
     display: flex;
-    width: 70vh;
+    width: 400px;
+    height: 35px;
     flex-direction: row-reverse;
     align-items: right;
     padding: 16px;
@@ -8,18 +9,26 @@
 }
 
 .pawn {
-    width: 24px;
-    height: 24px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     border: 2px solid #353535;
-    margin-left: -12px; /* 50% 겹침 효과 (24px의 절반) */
-    position: relative;
     z-index: 1;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.pawn:first-child {
-    margin-right: 0; /* 첫 번째 pawn은 마진 없음 */
+.pawn.ready {
+    margin-left: -20px; /* 겹침 효과 */
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pawn.onBoard {
+    position: absolute;
+    transform: translate(-50%, -105%);
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .blue {
@@ -28,4 +37,8 @@
 
 .red {
     background-color: #FB836A;
+}
+
+.pawn.ready:first-child {
+    margin-right: 0; /* 첫 번째 pawn은 마진 없음 */
 }

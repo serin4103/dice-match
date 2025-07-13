@@ -17,18 +17,12 @@ export interface Node {
     candidate: Path[]; // 경로를 선택할 수 있는 경우
 }
 
-export interface PlayerInfo {
-    name: string;
-    color: Color;
-    finishedCount: number;
-}
-
 export interface DiceInfo {
     faces: number[];
     sum: number;
 }
 
-export interface GameLeftProps {
+export interface GameProps {
     turn: Color | null; // 현재 턴을 나타내는 상태
     setTurn: React.Dispatch<React.SetStateAction<Color | null>>; // 턴을 설정하는 함수
     playerStates: PlayerState[]; // 현재 플레이어 상태 배열
@@ -44,7 +38,7 @@ export interface DiceBuilderProps {
 
 export interface ReadyPawnsProps {
     color: Color;
-    count: number;
+    pawns: PawnState[];
     onClick: () => void;
 }
 

@@ -1,5 +1,6 @@
-import { GameLeftProps, Node, PawnPosition } from "@/types/game";
+import { GameProps, Node, PawnPosition } from "@/types/game";
 import ReadyPawns from "./ReadyPawns";
+import pawnStyles from "./Pawns.module.css";
 import styles from "./GameLeft.module.css";
 
 export default function GameLeft({
@@ -7,13 +8,13 @@ export default function GameLeft({
     setTurn,
     playerStates,
     setPlayerStates,
-}: GameLeftProps) {
+}: GameProps) {
     // 폰 이동 로직
-    const movePawn = (pawnIndex: number) => {
-        if (turn !== playerStates[0].color) return;
+    const movePawn = (color, index) => {
+        if (turn !== playerStates[0].color || color !== playerStates[0].color) return;
 
         const stepsToMove = playerStates[0].diceValue;
-        const pawnToMove = playerStates[0].pawns[pawnIndex];
+        const pawnToMove = playerStates[0].pawns[index];
         let currentPosition: PawnPosition;
 
         if (pawnToMove.position === "ready") {
@@ -21,6 +22,10 @@ export default function GameLeft({
         } else {
             currentPosition = pawnToMove.position;
         }
+
+        const pawnsToMove = (currentPosition === 0)
+            ? [pawnToMove]
+            : playerStates[0].pawns.filter((pawn) => pawn.position === currentPosition);
 
         let remainingSteps = stepsToMove;
 
@@ -49,14 +54,14 @@ export default function GameLeft({
             }
         }
 
-        // 플레이어 상태 업데이트
+        // 플레이어 상태 업데이트 - 같은 위치의 모든 폰들을 이동
         setPlayerStates((prev) =>
             prev.map((player, idx) =>
                 idx === 0 // playerIndex 대신 0으로 고정 (현재 Player 1만 이동)
                     ? {
                         ...player,
                         pawns: player.pawns.map((pawn, pawnIdx) =>
-                            pawnIdx === pawnIndex
+                            pawnsToMove.some(p => p.index === pawnIdx)
                                 ? { ...pawn, position: currentPosition }
                                 : pawn
                         ),
@@ -96,30 +101,46 @@ export default function GameLeft({
             )
         );
 
-        movePawn(readyPawnIndex); // 폰 이동 함수 호출
+        movePawn(playerStates[0].color, readyPawnIndex); // 폰 이동 함수 호출
     };
 
     // 보드 위의 폰 렌더링
     const renderPawnsOnBoard = () => {
         const pawnsOnBoard: JSX.Element[] = [];
+        
+        // 각 위치별 현재까지 렌더된 폰 인덱스 추적
+        const renderedPawns: { [position: number]: number[] } = {};
 
-        playerStates.forEach((player, playerIndex) => {
-            player.pawns.forEach((pawn, pawnIndex) => {
+        playerStates.forEach(player => {
+            player.pawns.forEach(pawn => {
                 if (typeof pawn.position === "number") {
                     const node = nodes.find((n) => n.index === pawn.position);
                     if (node) {
+                        renderedPawns[pawn.position] = renderedPawns[pawn.position] || [];
+                        const currentCount =
+                            renderedPawns[pawn.position].length;
+                        renderedPawns[pawn.position].push(pawn.index);
+                        
                         pawnsOnBoard.push(
                             <div
-                                key={`${playerIndex}-${pawnIndex}`}
-                                className={`${styles.pawn} ${
-                                    styles[pawn.color]
-                                }`}
+                                key={`${pawn.color}-${pawn.index}`}
+                                className={`${pawnStyles.pawn} ${
+                                    pawnStyles[pawn.color]
+                                } ${pawnStyles.onBoard}`}
                                 style={{
                                     top: node.top,
                                     left: node.left,
-                                    zIndex: 3,
+                                    transform: `translate(-50%, -${
+                                        50 + 15 * currentCount
+                                    }%)`,
+                                    zIndex: 3 + currentCount,
                                 }}
-                                onClick={() => movePawn(pawnIndex)}
+                                onClick={() =>
+                                    movePawn(
+                                        pawn.color,
+                                        renderedPawns[pawn.position][0]
+                                    )
+                                }
                             />
                         );
                     }
@@ -201,7 +222,7 @@ export default function GameLeft({
                         x2="90%"
                         y2="10%"
                         stroke="#e6e6e6"
-                        strokeWidth="5"
+                        strokeWidth="3"
                     />
                     <line
                         x1="90%"
@@ -209,7 +230,7 @@ export default function GameLeft({
                         x2="10%"
                         y2="10%"
                         stroke="#e6e6e6"
-                        strokeWidth="5"
+                        strokeWidth="3"
                     />
                     <line
                         x1="10%"
@@ -217,7 +238,7 @@ export default function GameLeft({
                         x2="10%"
                         y2="90%"
                         stroke="#e6e6e6"
-                        strokeWidth="5"
+                        strokeWidth="3"
                     />
                     <line
                         x1="10%"
@@ -225,7 +246,7 @@ export default function GameLeft({
                         x2="90%"
                         y2="90%"
                         stroke="#e6e6e6"
-                        strokeWidth="5"
+                        strokeWidth="3"
                     />
                     <line
                         x1="10%"
@@ -233,7 +254,7 @@ export default function GameLeft({
                         x2="90%"
                         y2="90%"
                         stroke="#e6e6e6"
-                        strokeWidth="5"
+                        strokeWidth="3"
                     />
                     <line
                         x1="90%"
@@ -241,7 +262,7 @@ export default function GameLeft({
                         x2="10%"
                         y2="90%"
                         stroke="#e6e6e6"
-                        strokeWidth="5"
+                        strokeWidth="3"
                     />
                 </svg>
                 {nodes.map((n, i) => (
@@ -259,10 +280,10 @@ export default function GameLeft({
             </div>
             <ReadyPawns
                 color="blue"
-                count={
+                pawns={
                     playerStates[0].pawns.filter(
                         (pawn) => pawn.position === "ready"
-                    ).length
+                    )
                 }
                 onClick={handleReadyPawnClick}
             />

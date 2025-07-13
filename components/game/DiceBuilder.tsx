@@ -41,7 +41,7 @@ export default function DiceBuilder({
             buildDice(faces as number[]);
         } else {
             setErrorMessage(
-                `총합이 ${maxSum} 이하가 되도록 모든 면에 0~5 사이의 숫자를 입력하세요`
+                `총합이 ${maxSum} 이하가 되도록 모든 면에 1~5 사이의 숫자를 입력하세요`
             );
         }
     }, [faces, sum, buildDice, maxSum]);
@@ -51,7 +51,7 @@ export default function DiceBuilder({
         const newSum = sum + (value === "" ? 0 : num);
         if (newSum > maxSum) {
             setErrorMessage(
-                `총합이 ${maxSum} 이하가 되도록 모든 면에 0~5 사이의 숫자를 입력하세요`
+                `총합이 ${maxSum} 이하가 되도록 모든 면에 1~5 사이의 숫자를 입력하세요`
             );
         } else if (value === "" || (num >= 0 && num <= 5)) {
             const updated = [...faces];
