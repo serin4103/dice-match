@@ -2,6 +2,15 @@ import { GameState, PlayerState, Color, DiceRolledEvent, Animation } from "../..
 import { PrismaClient } from '@prisma/client';
 type PlayerInfo = { socketId: string; userId: number };
 
+function mapToString<K, V>(map: Map<K, V>): string {
+  // Map을 배열로 변환 후 JSON 문자열로 직렬화
+  return JSON.stringify(Array.from(map.entries()));
+}
+function stringToMap<K, V>(str: string): Map<K, V> {
+  // JSON 문자열을 배열로 파싱 후 Map으로 변환
+  return new Map(JSON.parse(str));
+}
+
 export class GameManager {
     private waitingPlayers: Map<string, number> = new Map(); // (socketId, userId)
     private activeGames: Map<string, GameState> = new Map();
@@ -14,7 +23,7 @@ export class GameManager {
     getSocketId(gameId: string): null | string[] {
         const game = this.activeGames.get(gameId);
         if(!game) return null;
-        const userIds: number[] = Array.from(game.playersState.keys());
+        const userIds: number[] = Array.from(stringToMap<number, PlayerState>(game.playersState).keys());
         const socketIds = userIds.filter(userId => this.socketIdMap.has(userId))
         .map(userId => this.socketIdMap.get(userId)!);
         return socketIds;
@@ -73,10 +82,10 @@ export class GameManager {
         const state2 = await this.initPlayerState(player2, "red");
         return {
             gameId: gameId,
-            playersState: new Map<number, PlayerState>([
+            playersState: mapToString(new Map<number, PlayerState>([
                 [player1.userId, state1],
                 [player2.userId, state2],
-            ]),
+            ])),
             currentTurn: player1.userId
         };
     }
@@ -130,12 +139,12 @@ export class GameManager {
         if(!game){
             throw new Error(`Game not found: ${gameId}`);
         }
-        const playerState = game.playersState.get(userId);
+        const playerState = stringToMap<number, PlayerState>(game.playersState).get(userId);
         if(!playerState){
             throw new Error(`Player state not found: ${userId}`);
         }
         playerState.diceValues = diceValues;
-        const allNotZero : boolean = Array.from(game.playersState.values()).every(
+        const allNotZero : boolean = Array.from(stringToMap<number, PlayerState>(game.playersState).values()).every(
             player =>
                 !(
                 Array.isArray(player.diceValues) &&
@@ -144,7 +153,7 @@ export class GameManager {
                 )
             );
         if(!allNotZero) return null;
-        const [[userId1, playerState1], [userId2, playerState2]] = Array.from(game.playersState.entries());
+        const [[userId1, playerState1], [userId2, playerState2]] = Array.from(stringToMap<number, PlayerState>(game.playersState).entries());
         const diceVal1 = this.getRandVal(playerState1.diceValues);
         const diceVal2 = this.getRandVal(playerState2.diceValues);
         let turnUserId;
@@ -160,8 +169,8 @@ export class GameManager {
             [userId2, diceVal2]
         ]);
         return {
-            diceValues: diceValueMap, 
-            diceResults: diceResultMap, 
+            diceValues: mapToString<number, number[]>(diceValueMap), 
+            diceResults: mapToString<number, number>(diceResultMap), 
             turn: turnUserId
         };
     }
@@ -171,8 +180,8 @@ export class GameManager {
     }
 
     updAnimation( gameId: string, anim: Animation) {
-        const game = this.getGameById(gameId);
-        const playerState = game?.playersState.get(anim.userId);
+        const game = this.getGameById(gameId)!;
+        const playerState = stringToMap<number, PlayerState>(game.playersState).get(anim.userId);
         if(!playerState) throw new Error("updAnimation: player does not exist");
         for(const pawnIndex of anim.pawnsIndex){
             playerState.pawnsState[pawnIndex].position = anim.toNode;
@@ -182,10 +191,10 @@ export class GameManager {
     updAnimationEnd( gameId: string, userId: number) : null | number {
         const game = this.getGameById(gameId);
         if(!game) throw new Error("updAnimationEnd: game does not exist");
-        const playerState = game?.playersState.get(userId);
+        const playerState = stringToMap<number, PlayerState>(game.playersState).get(userId);
         if(!playerState) throw new Error("updAnimationEnd: player does not exist");
         playerState.diceValues = [0, 0, 0, 0, 0, 0];
-        const allzero = Array.from(game.playersState.values()).every(playerState =>
+        const allzero = Array.from(stringToMap<number, PlayerState>(game.playersState).values()).every(playerState =>
             Array.isArray(playerState.diceValues) &&
             playerState.diceValues.length === 6 &&
             playerState.diceValues.every(v => v === 0)
@@ -195,7 +204,7 @@ export class GameManager {
     }
     checkGameEnd( gameId: string ) : null | number{
         const game = this.getGameById(gameId)!;
-        for (const [userId, playerState] of game.playersState.entries()) {
+        for (const [userId, playerState] of stringToMap<number, PlayerState>(game.playersState).entries()) {
             const allOut = playerState.pawnsState.every(pawn => pawn.position === "finished");
         if (allOut) return userId;
         }
@@ -206,7 +215,7 @@ export class GameManager {
         // 특정 게임을 activeGames에서 제거
         const game = this.getGameById(gameId);
         if (game) {
-            for (const userId of game.playersState.keys()) {
+            for (const userId of stringToMap<number, PlayerState>(game.playersState).keys()) {
                 this.socketIdMap.delete(userId);
             }
             this.activeGames.delete(gameId);

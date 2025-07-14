@@ -4,6 +4,16 @@ import { MatchedEvent, Animation, PawnsMovedEvent } from "../../../types/game";
 
 type PlayerInfo = { socketId: string; userId: string };
 
+function mapToString<K, V>(map: Map<K, V>): string {
+  // Map을 배열로 변환 후 JSON 문자열로 직렬화
+  return JSON.stringify(Array.from(map.entries()));
+}
+
+function stringToMap<K, V>(str: string): Map<K, V> {
+  // JSON 문자열을 배열로 파싱 후 Map으로 변환
+  return new Map(JSON.parse(str));
+}
+
 export function setupSocketHandlers(io: Server) {
     const gameManager = new GameManager();
 
@@ -26,10 +36,7 @@ export function setupSocketHandlers(io: Server) {
         // 게임 시작
         socket.on("startGame", (data : {gameId: string}) => {
             const game = gameManager.getGameById(data.gameId)!;
-            socket.emit("gameState", {
-                ...game,
-                playersState: Object.fromEntries(game.playersState),
-            });
+            socket.emit("gameState", game);
         })
 
         // 주사위 굴리기
