@@ -12,7 +12,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        origin: process.env.CLIENT_URL || "http://localhost:4000",
         methods: ["GET", "POST"],
     },
 });
@@ -29,11 +29,11 @@ app.get("/", (req, res) => {
 // 소켓 핸들러 설정
 setupSocketHandlers(io);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4000;
 
 httpServer.listen(PORT, () => {
     console.log(`🚀 Socket server running on port ${PORT}`);
     console.log(
-        `📡 Client URL: ${process.env.CLIENT_URL || "http://localhost:3000"}`
+        `📡 Client URL: ${process.env.CLIENT_URL || "http://localhost:4000"}`
     );
 });

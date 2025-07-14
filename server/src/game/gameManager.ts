@@ -1,24 +1,112 @@
-import { GameState } from "../../../types/game";
+import { GameState, PlayerState, Color, DiceRolledEvent, Animation } from "../../../types/game";
+import { PrismaClient } from '@prisma/client';
+type PlayerInfo = { socketId: string; userId: number };
 
 export class GameManager {
-    private waitingPlayers: Map<string, string> = new Map();
+    private waitingPlayers: Map<string, number> = new Map(); // (socketId, userId)
     private activeGames: Map<string, GameState> = new Map();
+    private socketIdMap: Map<number, string> = new Map(); // (userId, sockedId)
 
-    addPlayer(socketId: string, username: string): void {
-        // 대기실에 플레이어 추가
+    prisma = new PrismaClient();
 
-        if (this.waitingPlayers.has(socketId)) {
-            return;
-        }
+    // ------------------- Utility ----------------
 
-        this.waitingPlayers.set(socketId, username);
-
-        console.log(`👤 ${username} joined waiting queue`);
-
-        // 대기실에 충분한 플레이어가 있으면 게임 시작
-        this.tryStartGame();
+    getSocketId(gameId: string): null | string[] {
+        const game = this.activeGames.get(gameId);
+        if(!game) return null;
+        const userIds: number[] = Array.from(game.playersState.keys());
+        const socketIds = userIds.filter(userId => this.socketIdMap.has(userId))
+        .map(userId => this.socketIdMap.get(userId)!);
+        return socketIds;
+    }
+    
+    getGameById(gameId: string): GameState | null {
+        return this.activeGames.get(gameId) || null;
     }
 
+    // ---------------- Utility end ---------------
+
+    async addPlayer(socketId: string, userId: number): Promise<null | string> {
+        // 대기실에 플레이어 추가
+        if (this.waitingPlayers.has(socketId)) {
+            return null;
+        }
+        this.waitingPlayers.set(socketId, userId);
+        console.log(`👤 ${userId} joined waiting queue`);
+        // 대기실에 충분한 플레이어가 있으면 게임 시작
+        return await this.tryStartGame();
+    }
+    private async tryStartGame(): Promise<null | string> {
+        if (this.waitingPlayers.size < 2) return null;
+        // 대기실에서 플레이어들을 가져와서 게임 생성
+        const players = Array.from(this.waitingPlayers.entries()).slice(0, 2);
+
+        // 대기실에서 제거
+        players.forEach(([socketId, userId]) => {
+            this.waitingPlayers.delete(socketId);
+            this.socketIdMap.set(userId, socketId); //socketIdMap update
+        });
+
+        // 새 게임 생성
+        const gameId = this.generateGameId();
+
+        // activeGames update
+        this.activeGames.set(gameId, await this.initGameState(
+            gameId, 
+            {socketId: players[0][0], userId: players[0][1]} as PlayerInfo, 
+            {socketId: players[1][0], userId: players[1][1]} as PlayerInfo
+        ));
+        console.log(
+            `🎮 Game ${gameId} created with players: ${players
+                .map((p) => p[1])
+                .join(", ")}`
+        );
+        return gameId;
+    }
+    private generateGameId(): string {
+        return `game_${Date.now()}_${Math.random()
+            .toString(36)
+            .substring(2, 9)}`;
+    }
+    private async initGameState(gameId: string, player1: PlayerInfo, player2: PlayerInfo) : Promise<GameState> {
+        const state1 = await this.initPlayerState(player1, "blue");
+        const state2 = await this.initPlayerState(player2, "red");
+        return {
+            gameId: gameId,
+            playersState: new Map<number, PlayerState>([
+                [player1.userId, state1],
+                [player2.userId, state2],
+            ]),
+            currentTurn: player1.userId
+        };
+    }
+    private async initPlayerState(player: PlayerInfo, color: Color): Promise<PlayerState> {
+        // 1. prisma에서 유저 정보 가져오기
+        const user = await this.prisma.user.findUnique({
+            where: { id: player.userId },
+            select: { username: true, profilePicture: true }
+        });
+
+        if (!user) {
+            throw new Error(`User not found: ${player.userId}`);
+        }
+
+        // 2. PlayerState 객체 구성
+        return {
+            name: user.username,
+            profilePic: user.profilePicture ?? undefined,
+            color: color,
+            pawnsState: Array.from({ length: 4 }, (_, i) => ({
+                color: color,
+                position: "ready",
+                index: i,
+            })),
+            diceValues: [0, 0, 0, 0, 0, 0],        // 초기값 필요에 따라 설정
+            diceResult: 0,
+            bonus: 0
+        };
+    }
+    /*
     removePlayer(socketId: string): void {
         // 대기실에서 플레이어 제거
         this.waitingPlayers.delete(socketId);
@@ -34,12 +122,93 @@ export class GameManager {
             this.removeGame(userGame.id);
         }
     }
+    */
+    
+
+    buildDice( gameId: string, userId: number, diceValues: number[] ) : null | DiceRolledEvent {
+        const game = this.activeGames.get(gameId);
+        if(!game){
+            throw new Error(`Game not found: ${gameId}`);
+        }
+        const playerState = game.playersState.get(userId);
+        if(!playerState){
+            throw new Error(`Player state not found: ${userId}`);
+        }
+        playerState.diceValues = diceValues;
+        const allNotZero : boolean = Array.from(game.playersState.values()).every(
+            player =>
+                !(
+                Array.isArray(player.diceValues) &&
+                player.diceValues.length === 6 &&
+                player.diceValues.every(v => v === 0)
+                )
+            );
+        if(!allNotZero) return null;
+        const [[userId1, playerState1], [userId2, playerState2]] = Array.from(game.playersState.entries());
+        const diceVal1 = this.getRandVal(playerState1.diceValues);
+        const diceVal2 = this.getRandVal(playerState2.diceValues);
+        let turnUserId;
+        if(diceVal1 > diceVal2) turnUserId = userId1;
+        else if(diceVal1 < diceVal2) turnUserId = userId2;
+        else turnUserId = userId1 + userId2 - game.currentTurn;
+        const diceValueMap = new Map<number, number[]>([
+            [userId1, playerState1.diceValues],
+            [userId2, playerState2.diceValues]
+        ]);
+        const diceResultMap = new Map<number, number>([
+            [userId1, diceVal1],
+            [userId2, diceVal2]
+        ]);
+        return {
+            diceValues: diceValueMap, 
+            diceResults: diceResultMap, 
+            turn: turnUserId
+        };
+    }
+    getRandVal(arr : number[]) : number {
+        const randInt = Math.floor(Math.random() * arr.length);
+        return arr[randInt];
+    }
+
+    updAnimation( gameId: string, anim: Animation) {
+        const game = this.getGameById(gameId);
+        const playerState = game?.playersState.get(anim.userId);
+        if(!playerState) throw new Error("updAnimation: player does not exist");
+        for(const pawnIndex of anim.pawnsIndex){
+            playerState.pawnsState[pawnIndex].position = anim.toNode;
+        }
+    }
+
+    updAnimationEnd( gameId: string, userId: number) : null | number {
+        const game = this.getGameById(gameId);
+        if(!game) throw new Error("updAnimationEnd: game does not exist");
+        const playerState = game?.playersState.get(userId);
+        if(!playerState) throw new Error("updAnimationEnd: player does not exist");
+        playerState.diceValues = [0, 0, 0, 0, 0, 0];
+        const allzero = Array.from(game.playersState.values()).every(playerState =>
+            Array.isArray(playerState.diceValues) &&
+            playerState.diceValues.length === 6 &&
+            playerState.diceValues.every(v => v === 0)
+        );
+        if(allzero) return this.checkGameEnd(gameId);
+        else return null;
+    }
+    checkGameEnd( gameId: string ) : null | number{
+        const game = this.getGameById(gameId)!;
+        for (const [userId, playerState] of game.playersState.entries()) {
+            const allOut = playerState.pawnsState.every(pawn => pawn.position === "finished");
+        if (allOut) return userId;
+        }
+        return null;
+    }
 
     removeGame(gameId: string): boolean {
         // 특정 게임을 activeGames에서 제거
-        const gameExists = this.activeGames.has(gameId);
-        
-        if (gameExists) {
+        const game = this.getGameById(gameId);
+        if (game) {
+            for (const userId of game.playersState.keys()) {
+                this.socketIdMap.delete(userId);
+            }
             this.activeGames.delete(gameId);
             console.log(`🗑️ Game ${gameId} removed from active games`);
             return true;
@@ -47,119 +216,5 @@ export class GameManager {
         
         console.log(`⚠️ Game ${gameId} not found in active games`);
         return false;
-    }
-
-    private tryStartGame(): void {
-        if (this.waitingPlayers.size >= 2) {
-            // 대기실에서 플레이어들을 가져와서 게임 생성
-            const players = Array.from(this.waitingPlayers.entries()).slice(
-                0,
-                2
-            );
-
-            // 대기실에서 제거
-            players.forEach(([socketId, ]) => {
-                this.waitingPlayers.delete(socketId);
-            });
-
-            const playersState = new Map();
-            playersState.set(players[0][0],
-                {
-                    name: players[0][1],
-                    color: "blue",
-                    pawns: Array.from({ length: 4 }, (_, i) => ({
-                        color: "blue",
-                        position: "ready",
-                        index: i,
-                    })),
-                    diceValue: 0,
-                    bonus: 0,
-                }
-            );
-            playersState.set(players[1][0],
-                {
-                    name: players[1][1],
-                    color: "red",
-                    pawns: Array.from({ length: 4 }, (_, i) => ({
-                        color: "red",
-                        position: "ready",
-                        index: i,
-                    })),
-                    diceValue: 0,
-                    bonus: 0,
-                }
-            );
-
-            // 새 게임 생성
-            const gameId = this.generateGameId();
-            const game: GameState = {
-                id: gameId,
-                playersState: playersState,
-                currentTurn: null,
-                winner: null,
-            };
-
-            this.activeGames.set(gameId, game);
-
-            console.log(
-                `🎮 Game ${gameId} created with players: ${players
-                    .map((p) => p[1])
-                    .join(", ")}`
-            );
-        }
-    }
-
-    setDiceValue(
-        gameId: string,
-        socketId: string,
-        diceValue: number
-    ): { gameState: GameState | null } {
-        const game = this.activeGames.get(gameId);
-        if (!game) {
-            return { gameState: null };
-        }
-
-        const prevPlayerState = game.playersState.get(socketId);
-        if (!prevPlayerState) {
-            return { gameState: null };
-        }
-
-        game.playersState.set(socketId, {
-            ...prevPlayerState,
-            diceValue: diceValue,
-        });
-        const newPlayerStates = Array.from(game.playersState.values());
-
-        const newTurn = (newPlayerStates.every((p) => p.diceValue > 0)) 
-            ? ((newPlayerStates[0].diceValue > newPlayerStates[1].diceValue) 
-                ? newPlayerStates[0].color 
-                : (newPlayerStates[0].diceValue < newPlayerStates[1].diceValue)
-                    ? newPlayerStates[1].color
-                    : (game.currentTurn === newPlayerStates[0].color
-                        ? newPlayerStates[1].color
-                        : newPlayerStates[0].color)) 
-            : null;
-
-        game.currentTurn = newTurn;
-
-        return { gameState: game };
-    }
-
-    private generateGameId(): string {
-        return `game_${Date.now()}_${Math.random()
-            .toString(36)
-            .substring(2, 9)}`;
-    }
-
-    getGameById(gameId: string): GameState | null {
-        return this.activeGames.get(gameId) || null;
-    }
-
-    getWaitingPlayers(): string[] {
-        return Array.from(this.waitingPlayers.values());
-    }
-
-    getActiveGames(): GameState[] {
-        return Array.from(this.activeGames.values());
     }
 }
