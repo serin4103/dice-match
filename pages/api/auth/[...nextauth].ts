@@ -26,6 +26,7 @@ export const authOptions = {
       token.lose = existingUser?.lose ?? 0;
       token.username = existingUser?.username;
       token.profilePicture = existingUser?.profilePicture;
+      token.id = existingUser?.id;
       return token;
     },
     async session({ session, token }) {
@@ -36,6 +37,8 @@ export const authOptions = {
       session.user.lose = token.lose;
       session.user.username = token.username;
       session.user.profilePicture = token.profilePicture;
+      session.user.id = token.id;
+      console.log("session: ", session);
       return session;
     },
   },

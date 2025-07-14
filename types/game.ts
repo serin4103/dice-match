@@ -83,11 +83,11 @@ export interface Animation {
 
 // 서버에서 클라이언트로 보내는 이벤트들
 export interface SocketEvents {
-    // 게임 상태 업데이트
-    gameState: GameState;
-
     // 게임 시작 알림
-    gameStarted: GameState;
+    matched: MatchedEvent;
+
+    // 초기 게임 상태 전송
+    gameState: GameState;
 
     // 주사위 굴림 결과
     diceRolled: DiceRolledEvent;
@@ -109,6 +109,9 @@ export interface SocketEvents {
 export interface ClientEvents {
     // 게임 참가 (대기실에 추가)
     join: JoinEvent;
+
+    // 초기 게임 상태 요청
+    startGame: startGameEvent;
   
     // 주사위 완성
     buildDice: BuildDiceEvent;
@@ -120,11 +123,20 @@ export interface ClientEvents {
     animationEnd: AnimationEndEvent;
 }
 
+export interface MatchedEvent {
+    gameId: string; // 게임 ID
+}
+
 export interface GameState {
     gameId: string;
     playersState: Map<number, PlayerState>; // Map of userIDs to PlayerState
     currentTurn: number;
 }
+
+export interface GameStartedEvent {
+    gameId: string;
+}
+
 
 export interface GameEndedEvent {
     winner: number; // UserID of the winner
@@ -146,6 +158,10 @@ export interface ErrorEvent {
 
 export interface JoinEvent {
     userId: number;
+}
+
+export interface startGameEvent {
+    gameId: string;
 }
 
 export interface BuildDiceEvent {
