@@ -1,126 +1,155 @@
-import { GameProps, Node, PawnPosition } from "@/types/game";
+import { GameLeftProps, Node } from "@/types/game";
+import { useState } from "react";
 import ReadyPawns from "./ReadyPawns";
+import { useSocket } from "../../contexts/SocketContext";
 import pawnStyles from "./Pawns.module.css";
 import styles from "./GameLeft.module.css";
 
 export default function GameLeft({
-    turn,
-    setTurn,
-    playerStates,
-    setPlayerStates,
-}: GameProps) {
-    // 폰 이동 로직
-    const movePawn = (color, index) => {
-        if (turn !== playerStates[0].color || color !== playerStates[0].color) return;
+    gameId,
+    readyToMove,
+    setReadyToMove,
+    playersState,
+    setPlayersState,
+    myId,
+    opponentId
+}: GameLeftProps) {
 
-        const stepsToMove = playerStates[0].diceValue;
-        const pawnToMove = playerStates[0].pawns[index];
-        let currentPosition: PawnPosition;
+    const { socket } = useSocket();
+    const [multiPathNode, setMultiPathNode] = useState<Node | null>(null); 
 
-        if (pawnToMove.position === "ready") {
-            currentPosition = 0;
-        } else {
-            currentPosition = pawnToMove.position;
+    const handlePawnClick = (playerIndex, pawnIndex) => {
+        
+        if (!readyToMove || playerIndex !== 0) {
+            return;
         }
+        setReadyToMove(false);
 
-        const pawnsToMove = (currentPosition === 0)
-            ? [pawnToMove]
-            : playerStates[0].pawns.filter((pawn) => pawn.position === currentPosition);
-
-        let remainingSteps = stepsToMove;
+        const pawnToMove = playersState[0].pawnsState[pawnIndex];
+        const initialPosition = (pawnToMove.position === "ready") ? 0 : pawnToMove.position;
 
         // 첫 번째 노드에서 경로 선택 확인
-        const initialNode = nodes.find((n) => n.index === currentPosition);
-        if (initialNode && initialNode.candidate.length > 1) {
-            // 경로 선택이 필요한 경우
-            const choice = confirm(
-                `경로를 선택하세요. 확인: ${initialNode.candidate[0].direction}, 취소: ${initialNode.candidate[1].direction}`
-            );
-            currentPosition = choice
-                ? initialNode.candidate[0].next
-                : initialNode.candidate[1].next;
-            remainingSteps--;
+        const initialNode = nodes.find((n) => n.index === initialPosition);
+        if (initialNode.candidate.length === 0) {
+            const pawnsToMove = playersState[0].pawnsState.filter(pawn => pawn.position === initialPosition);
+            movePawns(pawnsToMove, initialPosition, []);
+        } else {
+            setMultiPathNode(initialNode);
         }
+    }
 
-        while (remainingSteps > 0) {
+    const handleArrowClick = (pathIndex) => {
+        const pawnsToMove = playersState[0].pawnsState.filter(pawn => pawn.position === multiPathNode.index);
+        const pawnsIndex = pawnsToMove.map(pawn => pawn.index);
+        const toNode = multiPathNode.candidate[pathIndex].next;
+        const animations = [{ userId: myId, pawnsIndex: pawnsIndex, fromNode: multiPathNode.index, toNode: toNode }];
+        movePawns(pawnsToMove, toNode, animations);
+        setMultiPathNode(null); // 화살표 선택 후 숨기기
+    };
+
+    // 폰 이동 로직
+    const movePawns = (pawnsToMove, initialPosition, animations) => {
+
+        const stepsToMove = playersState[0].diceResult;
+        let currentPosition = initialPosition;
+
+        while (animations.length < stepsToMove) {
             const node = nodes.find((n) => n.index === currentPosition);
             if (!node) break;
 
-            currentPosition = node.subsequent;
-            remainingSteps--;
+            const nextPosition = node.subsequent;
+            animations.push({
+                userId: myId,
+                pawnsIndex: pawnsToMove.map(p => p.index),
+                fromNode: currentPosition,
+                toNode: nextPosition
+            });
+            currentPosition = nextPosition;
 
             if (currentPosition === "finished") {
                 break;
             }
         }
 
-        // 플레이어 상태 업데이트 - 같은 위치의 모든 폰들을 이동
-        setPlayerStates((prev) =>
-            prev.map((player, idx) =>
-                idx === 0 // playerIndex 대신 0으로 고정 (현재 Player 1만 이동)
-                    ? {
-                        ...player,
-                        pawns: player.pawns.map((pawn, pawnIdx) =>
-                            pawnsToMove.some(p => p.index === pawnIdx)
-                                ? { ...pawn, position: currentPosition }
-                                : pawn
-                        ),
-                    }
-                    : player
-            )
-        );
+        const cathedPawns = currentPosition === "finished"
+            ? []
+            : playersState[1].pawnsState.filter((pawn) => pawn.position === currentPosition);
 
-        // 턴 종료
-        setTurn(null);
+        if (currentPosition === 22) {
+            cathedPawns.push(...playersState[1].pawnsState.filter(pawn => pawn.position === 27));
+            const pawnsToStack = playersState[0].pawnsState.filter(pawn => pawn.position === 27);
+            setPlayersState((prevState) => {
+                const newPawnsState = [...prevState[0].pawnsState];
+                pawnsToStack.forEach(pawn => {
+                    newPawnsState[pawn.index].position = 22;
+                });
+                return [
+                    { ...prevState[0], pawnsState: newPawnsState },
+                    prevState[1]
+                ];
+            });
+        } else if (currentPosition === 27) {
+            cathedPawns.push(...playersState[1].pawnsState.filter((pawn) => pawn.position === 22));
+            const pawnsToStack = playersState[0].pawnsState.filter((pawn) => pawn.position === 22);
+            setPlayersState((prevState) => {
+                const newPawnsState = [...prevState[0].pawnsState];
+                pawnsToStack.forEach((pawn) => {
+                    newPawnsState[pawn.index].position = 27;
+                });
+                return [
+                    { ...prevState[0], pawnsState: newPawnsState },
+                    prevState[1],
+                ];
+            });
+        }
+
+        if (cathedPawns.length > 0) {
+            // 상대 폰을 잡은 경우
+            animations.push({
+                userId: opponentId,
+                pawnsIndex: cathedPawns.map(p => p.index),
+                fromNode: currentPosition,
+                toNode: "ready"
+            });
+        }
+
+        // 서버로 애니메이션 데이터 전송
+        socket.emit("movePawns", {
+            gameId: gameId,
+            animations: animations
+        });
     };
 
     // ReadyPawns 클릭 시 폰 이동
     const handleReadyPawnClick = () => {
-        if (turn !== playerStates[0].color) return;
+        if (!readyToMove) return;
 
         // Ready 상태인 첫 번째 폰의 인덱스 찾기
-        const readyPawnIndex = playerStates[0].pawns.findIndex(
+        const readyPawnIndex = playersState[0].pawnsState.findIndex(
             (pawn) => pawn.position === "ready"
         );
 
-        if (readyPawnIndex === -1) return; // Ready 상태인 폰이 없으면 리턴
-
-        // 폰을 시작 위치(노드 0)로 이동
-        setPlayerStates((prev) =>
-            prev.map((player, idx) =>
-                idx === 0
-                    ? {
-                        ...player,
-                        pawns: player.pawns.map((pawn, pawnIdx) =>
-                            pawnIdx === readyPawnIndex
-                                ? { ...pawn, position: 0 }
-                                : pawn
-                        ),
-                    }
-                    : player
-            )
-        );
-
-        movePawn(playerStates[0].color, readyPawnIndex); // 폰 이동 함수 호출
+        handlePawnClick(0, readyPawnIndex); // 폰 이동 함수 호출
     };
 
     // 보드 위의 폰 렌더링
     const renderPawnsOnBoard = () => {
         const pawnsOnBoard: JSX.Element[] = [];
-        
+
         // 각 위치별 현재까지 렌더된 폰 인덱스 추적
         const renderedPawns: { [position: number]: number[] } = {};
 
-        playerStates.forEach(player => {
-            player.pawns.forEach(pawn => {
+        playersState.forEach((player, playerIndex) => {
+            player.pawnsState.forEach((pawn) => {
                 if (typeof pawn.position === "number") {
                     const node = nodes.find((n) => n.index === pawn.position);
                     if (node) {
-                        renderedPawns[pawn.position] = renderedPawns[pawn.position] || [];
+                        renderedPawns[pawn.position] =
+                            renderedPawns[pawn.position] || [];
                         const currentCount =
                             renderedPawns[pawn.position].length;
                         renderedPawns[pawn.position].push(pawn.index);
-                        
+
                         pawnsOnBoard.push(
                             <div
                                 key={`${pawn.color}-${pawn.index}`}
@@ -136,8 +165,8 @@ export default function GameLeft({
                                     zIndex: 3 + currentCount,
                                 }}
                                 onClick={() =>
-                                    movePawn(
-                                        pawn.color,
+                                    handlePawnClick(
+                                        playerIndex,
                                         renderedPawns[pawn.position][0]
                                     )
                                 }
@@ -151,18 +180,62 @@ export default function GameLeft({
         return pawnsOnBoard;
     };
 
+    const renderArrows = () => {
+        if (!multiPathNode) return null;
+
+        const arrows = [];
+
+        const rotateArrow = (direction) => {
+            switch (direction) {
+            case "right":
+                return "rotate(90deg)";
+            case "right-down":
+                return "rotate(135deg)";
+            case "down":
+                return "rotate(180deg)";
+            case "left-down":
+                return "rotate(225deg)";
+            case "left":
+                return "rotate(270deg)";
+            default:
+                return "rotate(0deg)";
+            }
+        };
+
+        multiPathNode.candidate.forEach((path, index) => {
+            arrows.push(
+                <div
+                    key={`arrow-${index}`}
+                    className={styles.arrow}
+                    onClick={() => handleArrowClick(index)}
+                    style={{
+                        top: multiPathNode.top,
+                        left: multiPathNode.left,
+                        transform: `translate(-50%, -50%) ${rotateArrow(path.direction)}`,
+                        marginLeft: `${(index - 0.5) * 60}px`, // 화살표들을 좌우로 분산
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#333',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                    }}
+                >
+                    ↑
+                </div>
+            );
+        });
+
+        return arrows;
+    }
+
     const nodes: Node[] = [
         { index: 0, top: "90%", left: "90%", subsequent: 1, candidate: [] },
         { index: 1, top: "74%", left: "90%", subsequent: 2, candidate: [] },
         { index: 2, top: "58%", left: "90%", subsequent: 3, candidate: [] },
         { index: 3, top: "42%", left: "90%", subsequent: 4, candidate: [] },
         { index: 4, top: "26%", left: "90%", subsequent: 5, candidate: [] },
-        {
-            index: 5,
-            top: "10%",
-            left: "90%",
-            subsequent: 6,
-            candidate: [
+        { index: 5, top: "10%", left: "90%", subsequent: 6, candidate: 
+            [
                 { direction: "left", next: 6 },
                 { direction: "left-down", next: 20 },
             ],
@@ -171,12 +244,8 @@ export default function GameLeft({
         { index: 7, top: "10%", left: "58%", subsequent: 8, candidate: [] },
         { index: 8, top: "10%", left: "42%", subsequent: 9, candidate: [] },
         { index: 9, top: "10%", left: "26%", subsequent: 10, candidate: [] },
-        {
-            index: 10,
-            top: "10%",
-            left: "10%",
-            subsequent: 11,
-            candidate: [
+        { index: 10, top: "10%", left: "10%", subsequent: 11, candidate: 
+            [
                 { direction: "down", next: 11 },
                 { direction: "right-down", next: 25 },
             ],
@@ -192,12 +261,8 @@ export default function GameLeft({
         { index: 19, top: "90%", left: "74%", subsequent: 30, candidate: [] },
         { index: 20, top: "26%", left: "74%", subsequent: 21, candidate: [] },
         { index: 21, top: "38%", left: "64%", subsequent: 22, candidate: [] },
-        {
-            index: 22,
-            top: "50%",
-            left: "50%",
-            subsequent: 23,
-            candidate: [
+        { index: 22, top: "50%", left: "50%", subsequent: 23, candidate: 
+            [
                 { direction: "left-down", next: 23 },
                 { direction: "right-down", next: 28 },
             ],
@@ -206,7 +271,12 @@ export default function GameLeft({
         { index: 24, top: "74%", left: "26%", subsequent: 15, candidate: [] },
         { index: 25, top: "26%", left: "26%", subsequent: 26, candidate: [] },
         { index: 26, top: "38%", left: "38%", subsequent: 27, candidate: [] },
-        { index: 27, top: "50%", left: "50%", subsequent: 28, candidate: [] },
+        { index: 27, top: "50%", left: "50%", subsequent: 28, candidate: 
+            [
+                { direction: "right-down", next: 28 },
+                { direction: "left-down", next: 29 },
+            ] 
+        },
         { index: 28, top: "62%", left: "62%", subsequent: 29, candidate: [] },
         { index: 29, top: "74%", left: "74%", subsequent: 30, candidate: [] },
         { index: 30, top: "90%", left: "90%", subsequent: "finished", candidate: [] },
@@ -277,14 +347,13 @@ export default function GameLeft({
                     />
                 ))}
                 {renderPawnsOnBoard()}
+                {renderArrows()}
             </div>
             <ReadyPawns
                 color="blue"
-                pawns={
-                    playerStates[0].pawns.filter(
-                        (pawn) => pawn.position === "ready"
-                    )
-                }
+                pawns={playersState[0].pawnsState.filter(
+                    (pawn) => pawn.position === "ready"
+                )}
                 onClick={handleReadyPawnClick}
             />
         </div>

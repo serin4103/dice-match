@@ -21,9 +21,9 @@ export default function DiceBuilder({
     const [errorMessage, setErrorMessage] = useState("");
     const [timerKey, setTimerKey] = useState(0); // 타이머를 리셋하기 위한 키
 
-    // turn이 null이 되면 상태 초기화
+    // turn이 0이 되면 상태 초기화
     useEffect(() => {
-        if (turn === null) {
+        if (turn === 0) {
             setFaces(["", "", "", "", "", ""]);
             setDiceReady(false);
             setErrorMessage("");
