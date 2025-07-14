@@ -62,9 +62,104 @@ export interface PawnState {
 }
 
 export interface PlayerState {
-    name: string;
+    name: string; // 유저 닉네임
+    profilePic?: string; // 프로필 사진 URL (선택적)
     color: Color;
-    pawns: PawnState[];
-    diceValue: number; // -1 if no dice has been rolled yet
-    bonus: number;
+    pawnsState: PawnState[];
+    diceValues: number[]; // 주사위의 각 면의 값
+    diceResult: number; // 아직 주사위를 굴리지 않았으면 0
+    bonus: number; // 잡은 말 개수 * 3
+}
+
+export interface Animation {
+    userId: number; // UserID of the player who moved the pawns
+    pawnsIndex: number[]; // Index of the pawn that was moved
+    fromNode: PawnPosition; // Starting position of the pawn
+    toNode: PawnPosition; // Ending position of the pawn
+}
+    
+
+// ===== Socket.IO Event Types =====
+
+// 서버에서 클라이언트로 보내는 이벤트들
+export interface SocketEvents {
+    // 게임 상태 업데이트
+    gameState: GameState;
+
+    // 게임 시작 알림
+    gameStarted: GameState;
+
+    // 주사위 굴림 결과
+    diceRolled: DiceRolledEvent;
+
+    // 말 이동 결과
+    pawnsMoved: PawnsMovedEvent;
+
+    // 상대 플레이어가 게임을 떠났을 때
+    playerLeft: ErrorEvent;
+
+    // 새로운 턴 시작 알림
+    newTurnStart: void;
+
+    // 에러 메시지
+    error: ErrorEvent;
+}
+
+// 클라이언트에서 서버로 보내는 이벤트들
+export interface ClientEvents {
+    // 게임 참가 (대기실에 추가)
+    join: JoinEvent;
+  
+    // 주사위 완성
+    buildDice: BuildDiceEvent;
+
+    // 말 이동 경로 결정
+    movePawns: MovePawnsEvent;
+
+    // 말 이동 애니메이션 종료
+    animationEnd: AnimationEndEvent;
+}
+
+export interface GameState {
+    gameId: string;
+    playersState: Map<number, PlayerState>; // Map of userIDs to PlayerState
+    currentTurn: number;
+}
+
+export interface GameEndedEvent {
+    winner: number; // UserID of the winner
+}
+
+export interface DiceRolledEvent {
+    diceValues: Map<number, number[]>; // 주사위 6면 값
+    diceResults: Map<number, number>; // 주사위 굴린 결과
+    turn: number; // 현재 턴 유저 ID
+}
+
+export interface PawnsMovedEvent {
+    animation: Animation[];
+}
+
+export interface ErrorEvent {
+    message: string;
+}
+
+export interface JoinEvent {
+    userId: number;
+}
+
+export interface BuildDiceEvent {
+    gameId: string;
+    userId: number; // UserID of the player who built the dice
+    diceValues: number[];
+}
+
+export interface MovePawnsEvent {
+    gameId: string;
+    animation: Animation[];
+}
+
+export interface AnimationEndEvent {
+    gameId: string;
+    userId: number; // UserID of the player who moved the pawns
 }
