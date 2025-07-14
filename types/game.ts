@@ -101,6 +101,9 @@ export interface SocketEvents {
     // 새로운 턴 시작 알림
     newTurnStart: void;
 
+    // 게임이 끝남
+    gameEnded: GameEndedEvent
+
     // 에러 메시지
     error: ErrorEvent;
 }

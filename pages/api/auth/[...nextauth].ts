@@ -38,7 +38,6 @@ export const authOptions = {
       session.user.username = token.username;
       session.user.profilePicture = token.profilePicture;
       session.user.id = token.id;
-      console.log("session: ", session);
       return session;
     },
   },
