@@ -2,4 +2,7 @@ node_modules/
 .next/
 .DS_STORE
 .env
+.vscode/
+.prettierrc
+.prettierignore
 .env.local
