@@ -22,13 +22,7 @@ export interface DiceInfo {
     sum: number;
 }
 
-export interface GameProps {
-    gameId: string; // 게임 ID
-    playersState: PlayerState[]; // 현재 플레이어 상태 배열
-    myId: number; // 현재 플레이어의 ID
-}
-
-export interface GameLeftProps extends GameProps {
+export interface GameLeftProps {
     gameId: string;
     readyToMove: boolean; // 말 이동 준비 상태,
     setReadyToMove: React.Dispatch<React.SetStateAction<boolean>>;
@@ -38,7 +32,7 @@ export interface GameLeftProps extends GameProps {
     opponentId: number; // 상대 플레이어의 ID
 }
 
-export interface GameRightProps extends GameProps {
+export interface GameRightProps {
     gameId: string;
     turn: number; // 현재 턴을 나타내는 상태
     playersState: PlayerState[];
@@ -197,4 +191,14 @@ export interface MovePawnsEvent {
 export interface AnimationEndEvent {
     gameId: string;
     userId: number; // UserID of the player who moved the pawns
+}
+
+export function mapToString<K, V>(map: Map<K, V>): string {
+    // Map을 배열로 변환 후 JSON 문자열로 직렬화
+    return JSON.stringify(Array.from(map.entries()));
+}
+
+export function stringToMap<K, V>(str: string): Map<K, V> {
+    // JSON 문자열을 배열로 파싱 후 Map으로 변환
+    return new Map(JSON.parse(str));
 }

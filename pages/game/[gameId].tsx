@@ -1,7 +1,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { PlayerState, Color, GameState, DiceRolledEvent, PawnsMovedEvent, PawnPosition } from "@/types/game";
+import { PlayerState, GameState, DiceRolledEvent, PawnsMovedEvent, PawnPosition, stringToMap } from "@/types/game";
 import GameLeft from "@/components/game/GameLeft";
 import GameRight from "@/components/game/GameRight";
 import { useSocket } from "../../contexts/SocketContext";
@@ -25,12 +25,13 @@ export default function Game() {
                 console.log("🔄 Game state received:", gameState);
 
                 const newPlayersState: PlayerState[] = [];
+                const playersStateMap = stringToMap<number, PlayerState>(gameState.playersState);
                 
                 // GameState의 playersState는 Map<number, PlayerState>이므로 배열로 변환
                 if (gameState.playersState) {
-                    setOpponentId(gameState.playersState.keys().filter(id => id !== session.user.id)[0]);
-                    newPlayersState.push(gameState.playersState[session.user.id]);
-                    newPlayersState.push(gameState.playersState[opponentId]);
+                    setOpponentId(playersStateMap.keys().filter(id => id !== session.user.id)[0]);
+                    newPlayersState.push(playersStateMap[session.user.id]);
+                    newPlayersState.push(playersStateMap[opponentId]);
                 }
             };
 
@@ -38,15 +39,18 @@ export default function Game() {
                 console.log("🎲 Dice rolled:", data);
                 // 주사위 결과 처리
 
+                const diceValuesMap = stringToMap<number, number>(data.diceValues);
+                const diceResultsMap = stringToMap<number, number>(data.diceResults);
+
                 setPlayersState((prevState) => [
                     {
                         ...prevState[0],
-                        diceResult: data.diceResults[session.user.id],
+                        diceResult: diceResultsMap[session.user.id],
                     },
                     {
                         ...prevState[1],
-                        diceValues: data.diceValues[opponentId],
-                        diceResult: data.diceResults[opponentId],
+                        diceValues: diceValuesMap[opponentId],
+                        diceResult: diceResultsMap[opponentId],
                     },
                 ]);
 
@@ -135,12 +139,8 @@ export default function Game() {
             <GameRight
                 gameId={gameId as string}
                 turn={turn}
-                readyToMove={readyToMove}
-                setReadyToMove={setReadyToMove}
                 playersState={playersState}
-                setPlayersState={setPlayersState}
                 myId={session.user.id}
-                opponentId={opponentId}
             />
         </div>
     );
