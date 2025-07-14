@@ -148,7 +148,7 @@ export interface MatchedEvent {
 
 export interface GameState {
     gameId: string;
-    playersState: Map<number, PlayerState>; // Map of userIDs to PlayerState
+    playersState: string // Map<number, PlayerState>; // Map of userIDs to PlayerState
     currentTurn: number;
 }
 
@@ -162,8 +162,8 @@ export interface GameEndedEvent {
 }
 
 export interface DiceRolledEvent {
-    diceValues: Map<number, number[]>; // 주사위 6면 값
-    diceResults: Map<number, number>; // 주사위 굴린 결과
+    diceValues: string // Map<number, number[]>; // 주사위 6면 값
+    diceResults: string // Map<number, number>; // 주사위 굴린 결과
     turn: number; // 현재 턴 유저 ID
 }
 
