@@ -2,7 +2,7 @@ export type Color = "blue" | "red";
 
 export type PawnPosition = "ready" | "finished" | number;
 
-type Direction = "up" | "down" | "left" | "right" | "left-down" | "right-down";
+export type Direction = "down" | "left" | "right" | "left-down" | "right-down";
 
 export interface Path {
     direction: Direction;
@@ -23,14 +23,30 @@ export interface DiceInfo {
 }
 
 export interface GameProps {
-    turn: Color | null; // 현재 턴을 나타내는 상태
-    setTurn: React.Dispatch<React.SetStateAction<Color | null>>; // 턴을 설정하는 함수
-    playerStates: PlayerState[]; // 현재 플레이어 상태 배열
-    setPlayerStates: React.Dispatch<React.SetStateAction<PlayerState[]>>; // 플레이어 상태 설정 함수
+    gameId: string; // 게임 ID
+    playersState: PlayerState[]; // 현재 플레이어 상태 배열
+    myId: number; // 현재 플레이어의 ID
+}
+
+export interface GameLeftProps extends GameProps {
+    gameId: string;
+    readyToMove: boolean; // 말 이동 준비 상태,
+    setReadyToMove: React.Dispatch<React.SetStateAction<boolean>>;
+    playersState: PlayerState[];
+    setPlayersState: React.Dispatch<React.SetStateAction<PlayerState[]>>;
+    myId: number; // 현재 플레이어의 ID
+    opponentId: number; // 상대 플레이어의 ID
+}
+
+export interface GameRightProps extends GameProps {
+    gameId: string;
+    turn: number; // 현재 턴을 나타내는 상태
+    playersState: PlayerState[];
+    myId: number; // 현재 플레이어의 ID
 }
 
 export interface DiceBuilderProps {
-    turn: Color | null; // 현재 턴을 나타내는 상태
+    turn: number; // 현재 턴을 나타내는 상태
     duration: number; // seconds
     maxSum: number;
     buildDice: (faces: number[]) => void;
@@ -44,7 +60,7 @@ export interface ReadyPawnsProps {
 
 export interface StatusProps {
     name: string;
-    diceValue: number;
+    diceResult: number;
     color: Color;
     finishedCount: number;
 }

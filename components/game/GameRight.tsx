@@ -1,54 +1,44 @@
-import { GameProps } from "@/types/game";
+import { GameRightProps } from "@/types/game";
+import { useSocket } from "../../contexts/SocketContext";
 import DiceBuilder from "./DiceBuilder";
 import PlayerStatus from "./PlayerStatus";
 import styles from "./GameRight.module.css";
 
-
 export default function GameRight({
+    gameId,
     turn,
-    setTurn,
-    playerStates,
-    setPlayerStates,
-}: GameProps) {
-    
+    playersState,
+    myId
+}: GameRightProps) {
     const DEFAULTSUM = 18; // Default maximum sum for dice faces
+    const { socket } = useSocket();
 
-    // Todo: 서버에 내 faces와 randomDiceValue 보내고, 상대방 faces와 randomDiceValue, turn 가져오기
-    const buildDice = (faces: number[]) => {
-
-        // faces 중 하나를 랜덤으로 선택
-        const randomDiceValue = faces[Math.floor(Math.random() * faces.length)];
-
-        // playerStates[0]의 diceValue 업데이트
-        setPlayerStates((prev) =>
-            prev.map((player, index) =>
-                index === 0 ? { ...player, diceValue: randomDiceValue } : player
-            )
-        );
-
-        console.log("Dice built with faces:", faces);
-
-        setTurn("blue"); // Player 1의 턴으로 설정
+    const buildDice = (diceValues: number[]) => {
+        socket.emit("buildDice", {
+            gameId: gameId,
+            userId: myId,
+            diceValues: diceValues,
+        });
     };
 
     return (
         <div className={styles.gameRight}>
             <PlayerStatus
-                name={playerStates[0].name}
-                diceValue={playerStates[0].diceValue}
-                color={playerStates[0].color}
+                name={playersState[0].name}
+                diceResult={playersState[0].diceResult}
+                color={playersState[0].color}
                 finishedCount={
-                    playerStates[0].pawns.filter(
+                    playersState[0].pawnsState.filter(
                         (pawn) => pawn.position === "finished"
                     ).length
                 }
             />
             <PlayerStatus
-                name={playerStates[1].name}
-                diceValue={playerStates[1].diceValue}
-                color={playerStates[1].color}
+                name={playersState[1].name}
+                diceResult={playersState[1].diceResult}
+                color={playersState[1].color}
                 finishedCount={
-                    playerStates[1].pawns.filter(
+                    playersState[1].pawnsState.filter(
                         (pawn) => pawn.position === "finished"
                     ).length
                 }
@@ -56,7 +46,7 @@ export default function GameRight({
             <DiceBuilder
                 turn={turn}
                 duration={20}
-                maxSum={DEFAULTSUM + playerStates[0].bonus}
+                maxSum={DEFAULTSUM + playersState[0].bonus}
                 buildDice={buildDice}
             />
         </div>
