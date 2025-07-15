@@ -1,4 +1,4 @@
-import { GameState, PlayerState, Color, DiceRolledEvent, Animation } from "../../../types/game";
+import { GameState, PlayerState, Color, DiceRolledEvent, Animation } from "../../types/game";
 import { PrismaClient } from '@prisma/client';
 type PlayerInfo = { socketId: string; userId: number };
 
