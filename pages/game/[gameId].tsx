@@ -1,39 +1,31 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { PlayerState, GameState, DiceRolledEvent, PawnsMovedEvent, PawnPosition, stringToMap } from "@/types/game";
+import { DiceRolledEvent, PawnsMovedEvent, PawnPosition, stringToMap } from "@/types/game";
 import GameLeft from "@/components/game/GameLeft";
 import GameRight from "@/components/game/GameRight";
 import { useSocket } from "../../contexts/SocketContext";
+import { useGameState } from "../../contexts/GameStateContext";
 import styles from "./Game.module.css";
 
 export default function Game() {
     const router = useRouter();
-    const { gameId } = router.query;
+    const { gameId: rawGameId } = router.query;
+    
+    // gameId를 안전하게 문자열로 변환
+    const gameId = Array.isArray(rawGameId) ? rawGameId[0] : rawGameId;
+    
     const { data: session } = useSession();
     const { socket, isConnected } = useSocket();
+    const { playersState, setPlayersState, myId, opponentId } = useGameState();
     const [readyToMove, setReadyToMove] = useState<boolean>(false);
     const [turn, setTurn] = useState<number>(0);
-    const [playersState, setPlayersState] = useState<PlayerState[]>([]);
-    const [opponentId, setOpponentId] = useState<number | null>(null);
+
 
     useEffect(() => {
-        if (socket && isConnected && gameId) {
+        // gameId가 문자열이고 소켓이 연결된 경우에만 실행
+        if (socket && isConnected && gameId && typeof gameId === 'string') {
             console.log("🎮 Game page loaded for gameId:", gameId);
-
-            const handleGameState = (gameState: GameState) => {
-                console.log("🔄 Game state received:", gameState);
-
-                const newPlayersState: PlayerState[] = [];
-                const playersStateMap = stringToMap<number, PlayerState>(gameState.playersState);
-                
-                // GameState의 playersState는 Map<number, PlayerState>이므로 배열로 변환
-                if (gameState.playersState) {
-                    setOpponentId(playersStateMap.keys().filter(id => id !== session.user.id)[0]);
-                    newPlayersState.push(playersStateMap[session.user.id]);
-                    newPlayersState.push(playersStateMap[opponentId]);
-                }
-            };
 
             const handleDiceRolled = (data: DiceRolledEvent) => {
                 console.log("🎲 Dice rolled:", data);
@@ -45,7 +37,7 @@ export default function Game() {
                 setPlayersState((prevState) => [
                     {
                         ...prevState[0],
-                        diceResult: diceResultsMap[session.user.id],
+                        diceResult: diceResultsMap[myId],
                     },
                     {
                         ...prevState[1],
@@ -55,7 +47,7 @@ export default function Game() {
                 ]);
 
                 setTurn(data.turn);
-                if (data.turn === session.user.id) {
+                if (data.turn === myId) {
                     setReadyToMove(true);
                 }
             };
@@ -77,13 +69,13 @@ export default function Game() {
                 };
                 
                 data.animation.forEach((anim) => {
-                    const userIndex = anim.userId === session.user.id ? 0 : 1;
+                    const userIndex = anim.userId === myId ? 0 : 1;
                     setTimeout(moveOneStep, 1000, userIndex, anim.pawnsIndex, anim.toNode);
                 });
 
                 socket.emit("animationEnd", {
                     gameId: gameId as string,
-                    userId: session.user.id
+                    userId: myId
                 })
             };
 
@@ -102,7 +94,6 @@ export default function Game() {
                 setTurn(0);
             };
 
-            socket.on("gameState", handleGameState);
             socket.on("diceRolled", handleDiceRolled);
             socket.on("pawnsMoved", handlePawnsMoved);
             socket.on("playerLeft", handlePlayerLeft);
@@ -115,32 +106,37 @@ export default function Game() {
 
             // cleanup: 컴포넌트 언마운트 시 리스너만 제거
             return () => {
-                socket.off("gameState", handleGameState);
                 socket.off("diceRolled", handleDiceRolled);
                 socket.off("pawnsMoved", handlePawnsMoved);
                 socket.off("playerLeft", handlePlayerLeft);
                 socket.off("newTurnStart", handleNewTurnStart);
             };
         }
-    }, [socket, isConnected, gameId, session, opponentId, setPlayersState, setTurn, router]);
+    }, [socket, isConnected, gameId, myId, opponentId, playersState, setPlayersState, setTurn, router]);
 
+    // gameId가 로드되지 않았거나 유효하지 않은 경우
+    if (!gameId || typeof gameId !== 'string') {
+        return (
+            <div style={{
+                height: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "18px"
+            }}>
+                게임 정보를 불러오는 중...
+            </div>
+        );
+    }
     
     return (
         <div className={styles.gameContainer}>
             <GameLeft
-                gameId={gameId as string}
                 readyToMove={readyToMove}
                 setReadyToMove={setReadyToMove}
-                playersState={playersState}
-                setPlayersState={setPlayersState}
-                myId={session.user.id}
-                opponentId={opponentId}
             />
             <GameRight
-                gameId={gameId as string}
                 turn={turn}
-                playersState={playersState}
-                myId={session.user.id}
             />
         </div>
     );
