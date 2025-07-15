@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { DiceRolledEvent, PawnsMovedEvent, PawnPosition, stringToMap } from "@/types/game";
+import Ending from "@/components/game/Ending";
 import GameLeft from "@/components/game/GameLeft";
 import GameRight from "@/components/game/GameRight";
 import { useSocket } from "../../contexts/SocketContext";
@@ -19,6 +20,7 @@ export default function Game() {
     const { socket, isConnected } = useSocket();
     const { setPlayersState, myId, opponentId, setTurn } = useGameState();
     const [readyToMove, setReadyToMove] = useState<boolean>(false);
+    const [winner, setWinner] = useState<number>(0);
 
 
     useEffect(() => {
@@ -116,8 +118,7 @@ export default function Game() {
             };
 
             const handleGameEnded = (data: any) => {
-                alert(`🏁 게임이 종료되었습니다! 승자는 ${data.winner}입니다.`);
-                router.replace("/");
+                setWinner(data.winner);
             };
 
             socket.on("diceRolled", handleDiceRolled);
@@ -156,7 +157,16 @@ export default function Game() {
             </div>
         );
     }
-    
+
+    // 게임이 끝난 경우
+    if (winner !== 0) {
+        return (
+            <div className={styles.gameContainer}>
+                <Ending winner={winner} />
+            </div>
+        );
+    }
+
     return (
         <div className={styles.gameContainer}>
             <GameLeft

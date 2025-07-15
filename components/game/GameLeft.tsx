@@ -295,15 +295,14 @@ export default function GameLeft({
                     className={styles.arrow}
                     onClick={() => handleArrowClick(index)}
                     style={{
-                        top: multiPathNode.top,
-                        left: multiPathNode.left,
+                        top: nodes[path.next].top,
+                        left: nodes[path.next].left,
                         transform: `translate(-50%, -50%) ${rotateArrow(path.direction)}`,
-                        marginLeft: `${(index - 0.5) * 60}px`, // 화살표들을 좌우로 분산
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        color: '#333',
-                        cursor: 'pointer',
-                        userSelect: 'none'
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        color: "#333",
+                        cursor: "pointer",
+                        userSelect: "none",
                     }}
                 >
                     ↑
