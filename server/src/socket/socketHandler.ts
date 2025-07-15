@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { GameManager } from "../game/gameManager";
-import { MatchedEvent, Animation, PawnsMovedEvent } from "../../../types/game";
+import { MatchedEvent, Animation, PawnsMovedEvent } from "../../types/game";
 
 type PlayerInfo = { socketId: string; userId: string };
 
