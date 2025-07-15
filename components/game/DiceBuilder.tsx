@@ -119,7 +119,7 @@ export default function DiceBuilder({
                 <div className={styles.diceSummary}>
                     <p>사용한 눈: {sum}</p>
                     <p>남은 눈: {maxSum - sum}</p>
-                    <button onClick={handleSubmit}>완료</button>
+                    <button onClick={handleSubmit} disabled={diceReady}>완료</button>
                 </div>
             </div>
             <div className={styles.errorMessage}>{errorMessage}</div>

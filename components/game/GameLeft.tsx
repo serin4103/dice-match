@@ -189,9 +189,7 @@ export default function GameLeft({
             socket.emit("movePawns", {
                 gameId: gameId,
                 animation: animations
-            });}, 1000); // 1초 후 서버로 전송
-
-        // 서버로 애니메이션 데이터 전송
+            });}, 100); // 0.1초 후 서버로 전송
         
     }, [nodes, playersState, myId, opponentId, gameId, socket, setPlayersState]);
 
@@ -220,7 +218,8 @@ export default function GameLeft({
             return pawnsOnBoard; // 플레이어 상태가 없으면 빈 배열 반환
         }
 
-        playersState.forEach((player, playerIndex) => {
+        playersState.toReversed().forEach((player, reversedIndex) => {
+            const playerIndex = reversedIndex === 0 ? 1 : 0; // 인덱스 조정
             // player와 pawnsState가 존재하고 배열인지 확인
             if (player && player.pawnsState && Array.isArray(player.pawnsState)) {
                 player.pawnsState.forEach((pawn) => {

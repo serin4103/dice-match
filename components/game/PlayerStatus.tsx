@@ -4,13 +4,23 @@ import pawnStyles from "./Pawns.module.css";
 import { useGameState } from "../../contexts/GameStateContext";
 
 export default function PlayerStatus({
-    name,
-    diceResult,
-    color,
-    finishedCount,
+    playerIndex
 }: StatusProps) {
 
-    const { playersState, myId, turn } = useGameState();
+    const { playersState, myId, opponentId, turn } = useGameState();
+    
+    // 안전한 접근을 위한 검사
+    if (!playersState[playerIndex]) {
+        return null; // 플레이어 데이터가 없으면 렌더링하지 않음
+    }
+    
+    const name = playersState[playerIndex].name;
+    const profilePic = playersState[playerIndex].profilePic || "defaultProfilePic.png"; // 기본 프로필 사진 설정
+    const diceResult = playersState[playerIndex].diceResult;
+    const color = playersState[playerIndex].color;
+    const finishedCount = playersState[playerIndex].pawnsState?.filter(
+        (pawn) => pawn.position === "finished"
+    ).length || 0;
 
     const finishedCircles = Array.from({ length: finishedCount }, (_, i) => (
         <div key={`f-${i}`} className={`${pawnStyles.pawn} ${styles[color]}`} />
@@ -22,8 +32,25 @@ export default function PlayerStatus({
 
     return (
         <div className={styles.playerStatus}>
-            <div className={styles.profile}>{name}</div>
-            <div className={`${styles.diceBox}`}>{diceResult}</div>
+            <div className={styles.profile}>
+                <div className={styles.profilePic}
+                    style={{
+                        backgroundImage: profilePic
+                            ? `url(${profilePic})`
+                            : undefined,
+                    }}
+                />
+                <div className={styles.playerName}>{name}</div>
+            </div>
+            <div
+                className={`
+                ${styles.diceBox} 
+                ${turn === myId && playerIndex === 0 ? styles[color] : ""}
+                ${turn === opponentId && playerIndex === 1 ? styles[color] : ""}
+                `}
+            >
+                {diceResult !== 0 && diceResult}
+            </div>
             <div className={styles.circleGroup}>
                 {finishedCircles}
                 {remainingPawns}
