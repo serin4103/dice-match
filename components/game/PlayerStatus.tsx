@@ -4,7 +4,7 @@ import pawnStyles from "./Pawns.module.css";
 
 export default function PlayerStatus({
     name,
-    diceValue,
+    diceResult,
     color,
     finishedCount,
 }: StatusProps) {
@@ -19,7 +19,7 @@ export default function PlayerStatus({
     return (
         <div className={styles.playerStatus}>
             <div className={styles.profile}>{name}</div>
-            <div className={styles.diceBox}>{diceValue}</div>
+            <div className={styles.diceBox}>{diceResult}</div>
             <div className={styles.circleGroup}>
                 {finishedCircles}
                 {remainingPawns}

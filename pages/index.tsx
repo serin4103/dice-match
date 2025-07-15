@@ -105,7 +105,7 @@ export default function Home() {
                         cursor: "pointer",
                         marginBottom: 8,
                     }}
-                    onClick={() => router.push("/game/start")}
+                    onClick={() => router.push("/loading")}
                 >
                     게임 시작
                 </button>

@@ -13,23 +13,25 @@ export default function Game() {
         {
             name: "Player 1",
             color: "blue",
-            pawns: Array.from({ length: 4 }, (_, i) => ({
+            pawnsState: Array.from({ length: 4 }, (_, i) => ({
                 color: "blue",
                 position: "ready",
                 index: i,
             })),
-            diceValue: 0,
+            diceValues: [0, 0, 0, 0, 0, 0], // 초기값 필요에 따라 설정
+            diceResult: 0,
             bonus: 0,
         },
         {
             name: "Player 2",
             color: "red",
-            pawns: Array.from({ length: 4 }, (_, i) => ({
+            pawnsState: Array.from({ length: 4 }, (_, i) => ({
                 color: "red",
                 position: "ready",
                 index: i,
             })),
-            diceValue: 0,
+            diceValues: [0, 0, 0, 0, 0, 0], // 초기값 필요에 따라 설정
+            diceResult: 0,
             bonus: 0,
         },
     ]);

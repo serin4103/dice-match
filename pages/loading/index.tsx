@@ -1,12 +1,17 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSocket } from "../../contexts/SocketContext";
+import { useGameState } from "../../contexts/GameStateContext";
+import { GameStartedEvent, GameState, stringToMap, PlayerState } from "@/types/game";
 
 export default function Loading() {
+
+    const { setGameId, setPlayersState, setMyId, setOpponentId } = useGameState();
     const { data: session, status } = useSession();
     const router = useRouter();
     const { socket, isConnected } = useSocket();
+    const hasJoinedRef = useRef(false);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -14,32 +19,63 @@ export default function Loading() {
             return;
         }
 
-        // 소켓이 연결되면 게임 이벤트 리스너 등록 및 join 이벤트 발송
-        if (socket && isConnected && session) {
+        // 소켓이 연결되고 아직 join하지 않은 경우에만 실행
+        if (socket && isConnected && session && !hasJoinedRef.current) {
             console.log('🔗 Loading page: Socket connected, sending join event...');
+            hasJoinedRef.current = true;
             
             // 서버에 join 이벤트 발송 (게임 대기열 참가)
             socket.emit("join", {
                 userId: session.user?.id
             });
 
-            const handleGameStarted = (gameId: string) => {
-                console.log('🎮 Game started:', gameId);
+            const handleGameStarted = (data: GameStartedEvent) => {
+                console.log('🎮 Game started:', data.gameId);
                 
-                // 게임이 시작되면 게임 페이지로 이동 (소켓 연결 유지)
-                setTimeout(() => {
-                    router.replace(`/game/${gameId}`);
-                }, 1000);
+                setGameId(data.gameId);
+                // 여기서 data.gameId를 직접 사용 (의존성 순환 방지)
+                socket.emit("startGame", { gameId: data.gameId });
             };
 
-            socket.on("gameStarted", handleGameStarted);
+            const handleGameState = (gameState: GameState) => {
+                console.log('📊 Game state received:', gameState);
+
+                if (!gameState) return;
+
+                const playersStateMap = stringToMap<number, PlayerState>(
+                    gameState.playersState
+                );
+
+                if (playersStateMap) {
+                    const playerIds = playersStateMap.keys();
+                    const myId = session.user?.id;
+                    const opponentId = playerIds.find((id) => id !== myId);
+                    setMyId(myId);
+                    setOpponentId(opponentId);
+
+                    const newPlayersState: PlayerState[] = [];
+                    newPlayersState.push(playersStateMap.get(myId));
+                    newPlayersState.push(playersStateMap.get(opponentId));
+                    setPlayersState(newPlayersState);
+                    console.log("Updated players state:", newPlayersState);
+
+                    setTimeout(() => {
+                        router.push(`/game/${gameState.gameId}`);
+                    }, 1000); // 1초 후 게임 페이지로 이동
+                }
+            }
+
+            socket.on("matched", handleGameStarted);
+            socket.on("gameState", handleGameState);
 
             // cleanup: 컴포넌트 언마운트 시 리스너만 제거 (소켓 연결은 유지)
             return () => {
-                socket.off("gameStarted", handleGameStarted);
+                socket.off("matched", handleGameStarted);
+                socket.off("gameState", handleGameState);
+                hasJoinedRef.current = false; // 다음 연결을 위해 리셋
             };
         }
-    }, [socket, isConnected, status, router, session]);
+    }, [socket, isConnected, status, session, router, setGameId, setMyId, setOpponentId, setPlayersState]);
 
     if (status === "loading") {
         return (

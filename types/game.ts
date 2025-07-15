@@ -23,20 +23,12 @@ export interface DiceInfo {
 }
 
 export interface GameLeftProps {
-    gameId: string;
-    readyToMove: boolean; // 말 이동 준비 상태,
+    readyToMove: boolean; // 말 이동 준비 상태
     setReadyToMove: React.Dispatch<React.SetStateAction<boolean>>;
-    playersState: PlayerState[];
-    setPlayersState: React.Dispatch<React.SetStateAction<PlayerState[]>>;
-    myId: number; // 현재 플레이어의 ID
-    opponentId: number; // 상대 플레이어의 ID
 }
 
 export interface GameRightProps {
-    gameId: string;
     turn: number; // 현재 턴을 나타내는 상태
-    playersState: PlayerState[];
-    myId: number; // 현재 플레이어의 ID
 }
 
 export interface DiceBuilderProps {
