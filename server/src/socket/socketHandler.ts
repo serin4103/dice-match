@@ -82,30 +82,18 @@ export function setupSocketHandlers(io: Server) {
 
         });
 
-        /*
         // 연결 해제    
         socket.on("disconnect", () => {
             console.log(`👋 User disconnected: ${socket.id}`);
-            
-            // 플레이어가 속한 게임 룸에서 나가기
-            const activeGames = gameManager.getActiveGames();
-            const userGame = activeGames.find((game) =>
-                Array.from(game.playersState.keys()).includes(socket.id)
-            );
-            
-            if (userGame) {
-                
-                // 게임 룸의 다른 플레이어들에게 알림
-                socket.to(userGame.id).emit("playerLeft", {
-                    gameId: userGame.id,
-                    leftPlayerId: socket.id
-                });
-                
-                io.in(userGame.id).socketsLeave(userGame.id);
-            }
-            
-            gameManager.removePlayer(socket.id);
+            const game = gameManager.getGameBySocketId(socket.id);
+            if(!game) return;
+            const gameId = game.gameId;
+            const socketIds = gameManager.getSocketId(gameId);
+            socketIds?.forEach((socketId) => {
+                console.log("playerLeft: ", gameId);
+                io.to(socketId).emit("playerLeft", "playerLeft");
+            });
+            gameManager.removeGame(gameId);
         });
-        */
     });
 }

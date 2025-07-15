@@ -13,8 +13,9 @@ function stringToMap<K, V>(str: string): Map<K, V> {
 
 export class GameManager {
     private waitingPlayers: Map<string, number> = new Map(); // (socketId, userId)
-    private activeGames: Map<string, GameState> = new Map();
-    private socketIdMap: Map<number, string> = new Map(); // (userId, sockedId)
+    private activeGames: Map<string, GameState> = new Map(); // (gameId, game)
+    private socketIdMap: Map<number, string> = new Map(); // (userId, socketId)
+    private userIdMap: Map<string, number> = new Map(); // (socketId, userId)
 
     prisma = new PrismaClient();
 
@@ -31,6 +32,19 @@ export class GameManager {
     
     getGameById(gameId: string): GameState | null {
         return this.activeGames.get(gameId) || null;
+    }
+
+    getGameBySocketId(socketId: string): GameState | null {
+        let userId = this.userIdMap.get(socketId);
+        if(!userId) return null;
+        let foundGame: GameState | null = null;
+        this.activeGames.forEach((game, gameId) => {
+            const playersMap = stringToMap<number, PlayerState>(game.playersState);
+            if (playersMap.has(userId)) {
+                foundGame = game;
+            }
+        });
+        return foundGame;
     }
 
     // ---------------- Utility end ---------------
@@ -54,6 +68,7 @@ export class GameManager {
         players.forEach(([socketId, userId]) => {
             this.waitingPlayers.delete(socketId);
             this.socketIdMap.set(userId, socketId); //socketIdMap update
+            this.userIdMap.set(socketId, userId); //userIdMap update
         });
 
         // 새 게임 생성
@@ -184,7 +199,10 @@ export class GameManager {
     initDice( gameId: string) {
         const game = this.getGameById(gameId)!;
         const playersState = stringToMap<number, PlayerState>(game.playersState);
-        for (const player of playersState.values()) player.diceValues = [0, 0, 0, 0, 0, 0];
+        playersState.forEach((player, playerId) => {
+            player.diceValues = [0, 0, 0, 0, 0, 0];
+        });
+        //for (const player of playersState.values()) player.diceValues = [0, 0, 0, 0, 0, 0];
         game.playersState = mapToString<number, PlayerState>(playersState);
     }
 
@@ -227,6 +245,8 @@ export class GameManager {
         const game = this.getGameById(gameId);
         if (game) {
             for (const userId of stringToMap<number, PlayerState>(game.playersState).keys()) {
+                const socketId = this.socketIdMap.get(userId);
+                if(socketId) this.userIdMap.delete(socketId);
                 this.socketIdMap.delete(userId);
             }
             this.activeGames.delete(gameId);
