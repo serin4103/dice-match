@@ -139,11 +139,13 @@ export class GameManager {
         if(!game){
             throw new Error(`Game not found: ${gameId}`);
         }
-        const playerState = stringToMap<number, PlayerState>(game.playersState).get(userId);
+        const mp = stringToMap<number, PlayerState>(game.playersState);
+        const playerState = mp.get(userId);
         if(!playerState){
             throw new Error(`Player state not found: ${userId}`);
         }
         playerState.diceValues = diceValues;
+        game.playersState = mapToString<number, PlayerState>(mp);
         const allNotZero : boolean = Array.from(stringToMap<number, PlayerState>(game.playersState).values()).every(
             player =>
                 !(

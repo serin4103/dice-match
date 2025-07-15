@@ -41,7 +41,9 @@ export function setupSocketHandlers(io: Server) {
 
         // 주사위 굴리기
         socket.on("buildDice", (data: { gameId: string, userId: number, diceValues: number[] }) => {
+            console.log("buildDice: ", data.gameId, data.userId, data.diceValues);
             const updResult = gameManager.buildDice(data.gameId, data.userId, data.diceValues);
+            console.log("updResult: ", updResult);
             if(updResult === null) return;
             const socketIds = gameManager.getSocketId(data.gameId);
             socketIds?.forEach((socketId) => {

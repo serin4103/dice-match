@@ -14,6 +14,7 @@ const io = new Server(httpServer, {
     cors: {
         origin: process.env.CLIENT_URL || "http://localhost:4000",
         methods: ["GET", "POST"],
+        credentials: true,
     },
 });
 
