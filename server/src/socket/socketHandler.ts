@@ -45,6 +45,7 @@ export function setupSocketHandlers(io: Server) {
             const updResult = gameManager.buildDice(data.gameId, data.userId, data.diceValues);
             console.log("updResult: ", updResult);
             if(updResult === null) return;
+            gameManager.initDice(data.gameId);
             const socketIds = gameManager.getSocketId(data.gameId);
             socketIds?.forEach((socketId) => {
                 io.to(socketId).emit("diceRolled", updResult);
@@ -58,6 +59,7 @@ export function setupSocketHandlers(io: Server) {
             });
             const socketIds = gameManager.getSocketId(data.gameId);
             socketIds?.forEach((socketId) => {
+                console.log("pawnsMoved: ", data.animation);
                 io.to(socketId).emit("pawnsMoved", {animation: data.animation} as PawnsMovedEvent);
             });
         });

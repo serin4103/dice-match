@@ -180,14 +180,22 @@ export class GameManager {
         const randInt = Math.floor(Math.random() * arr.length);
         return arr[randInt];
     }
+    initDice( gameId: string) {
+        const game = this.getGameById(gameId)!;
+        const playersState = stringToMap<number, PlayerState>(game.playersState);
+        for (const player of playersState.values()) player.diceValues = [0, 0, 0, 0, 0, 0];
+        game.playersState = mapToString<number, PlayerState>(playersState);
+    }
 
     updAnimation( gameId: string, anim: Animation) {
         const game = this.getGameById(gameId)!;
-        const playerState = stringToMap<number, PlayerState>(game.playersState).get(anim.userId);
+        const playersState = stringToMap<number, PlayerState>(game.playersState);
+        const playerState = playersState.get(anim.userId);
         if(!playerState) throw new Error("updAnimation: player does not exist");
         for(const pawnIndex of anim.pawnsIndex){
             playerState.pawnsState[pawnIndex].position = anim.toNode;
         }
+        game.playersState = mapToString<number, PlayerState>(playersState);
     }
 
     updAnimationEnd( gameId: string, userId: number) : null | number {
