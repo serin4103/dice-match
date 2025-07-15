@@ -12,16 +12,40 @@
     align-items: center;
     justify-content: center;
     font-size: 30px;
-    font-weight: bold;
     border: 2px solid #353535;
     border-radius: 10px;
-    background-color: white;
+    background-color: #C8C8C8;
+    color: #ffffff;
+}
+
+/* 플레이어 턴일 때 diceBox 색상 변경 */
+.diceBox.blue {
+    background-color: #8CC6DD;
+}
+
+.diceBox.red {
+    background-color: #FB836A;
+}
+
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.profilePic {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
 }
 
 .playerName {
     font-size: 16px;
-    font-weight: 600;
     color: #353535;
+    text-align: center;
 }
 
 .circleGroup {

@@ -67,15 +67,23 @@ export default function Game() {
                     });
                 };
                 
-                data.animation.forEach((anim) => {
+                // 0.5초마다 순차적으로 애니메이션 실행
+                data.animation.forEach((anim, index) => {
                     const userIndex = anim.userId === myId ? 0 : 1;
-                    setTimeout(moveOneStep, 1000, userIndex, anim.pawnsIndex, anim.toNode);
+                    const delay = index * 500; // 0.5초 간격
+                    setTimeout(() => {
+                        moveOneStep(userIndex, anim.pawnsIndex, anim.toNode);
+                    }, delay);
                 });
 
-                socket.emit("animationEnd", {
-                    gameId: gameId as string,
-                    userId: myId
-                })
+                // 모든 애니메이션이 끝난 후 animationEnd 이벤트 발송
+                const totalAnimationTime = data.animation.length * 500;
+                setTimeout(() => {
+                    socket.emit("animationEnd", {
+                        gameId: gameId as string,
+                        userId: myId
+                    });
+                }, totalAnimationTime);
             };
 
             const handlePlayerLeft = (data: any) => {
@@ -93,10 +101,16 @@ export default function Game() {
                 setTurn(0);
             };
 
+            const handleGameEnded = (data: any) => {
+                alert(`🏁 게임이 종료되었습니다! 승자는 ${data.winner}입니다.`);
+                router.replace("/");
+            };
+
             socket.on("diceRolled", handleDiceRolled);
             socket.on("pawnsMoved", handlePawnsMoved);
             socket.on("playerLeft", handlePlayerLeft);
             socket.on("newTurnStart", handleNewTurnStart);
+            socket.on("gameEnded", handleGameEnded);
 
             // 게임 룸에 참가 (이미 연결된 소켓 사용)
             socket.emit('startGame', {
@@ -109,6 +123,7 @@ export default function Game() {
                 socket.off("pawnsMoved", handlePawnsMoved);
                 socket.off("playerLeft", handlePlayerLeft);
                 socket.off("newTurnStart", handleNewTurnStart);
+                socket.off("gameEnded", handleGameEnded);
             };
         }
     }, [socket, isConnected, gameId, myId, opponentId, setPlayersState, setTurn, router]);

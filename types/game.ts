@@ -40,10 +40,7 @@ export interface ReadyPawnsProps {
 }
 
 export interface StatusProps {
-    name: string;
-    diceResult: number;
-    color: Color;
-    finishedCount: number;
+    playerIndex: number; // Index of the player in playersState
 }
 
 export interface TimerProps {
