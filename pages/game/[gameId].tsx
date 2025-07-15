@@ -37,6 +37,7 @@ export default function Game() {
                     {
                         ...prevState[0],
                         diceResult: diceResultsMap.get(myId) || 0,
+                        bonus: 0
                     },
                     {
                         ...prevState[1],
@@ -97,6 +98,19 @@ export default function Game() {
             const handleNewTurnStart = () => {
                 console.log("🔄 New turn started");
                 // 새 턴 시작 처리
+
+                setPlayersState((prevState) => [
+                    {
+                        ...prevState[0],
+                        diceValues: [0, 0, 0, 0, 0, 0],
+                        diceResult: 0,
+                    },
+                    {
+                        ...prevState[1],
+                        diceValues: [0, 0, 0, 0, 0, 0],
+                        diceResult: 0,
+                    },
+                ]);
 
                 setTurn(0);
             };

@@ -182,6 +182,10 @@ export default function GameLeft({
                 fromNode: currentPosition,
                 toNode: "ready"
             });
+
+            setPlayersState((prevState) => {
+                return [{...prevState[0], bonus: cathedPawns.length * 3}, prevState[1]];
+            });
         }
 
         console.log("movePawns animations:", animations);
@@ -218,8 +222,7 @@ export default function GameLeft({
             return pawnsOnBoard; // 플레이어 상태가 없으면 빈 배열 반환
         }
 
-        playersState.toReversed().forEach((player, reversedIndex) => {
-            const playerIndex = reversedIndex === 0 ? 1 : 0; // 인덱스 조정
+        playersState.forEach((player, playerIndex) => {
             // player와 pawnsState가 존재하고 배열인지 확인
             if (player && player.pawnsState && Array.isArray(player.pawnsState)) {
                 player.pawnsState.forEach((pawn) => {
