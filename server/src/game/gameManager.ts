@@ -162,6 +162,7 @@ export class GameManager {
         if(diceVal1 > diceVal2) turnUserId = userId1;
         else if(diceVal1 < diceVal2) turnUserId = userId2;
         else turnUserId = userId1 + userId2 - game.currentTurn;
+        game.currentTurn = turnUserId;
         const diceValueMap = new Map<number, number[]>([
             [userId1, playerState1.diceValues],
             [userId2, playerState2.diceValues]
