@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import Timer from "./Timer";
 import { DiceBuilderProps } from "@/types/game";
+import { useGameState } from "../../contexts/GameStateContext";
 import styles from "./DiceBuilder.module.css";
 
 export default function DiceBuilder({
-    turn,
     duration,
     buildDice,
     maxSum,
@@ -20,10 +20,11 @@ export default function DiceBuilder({
     const [diceReady, setDiceReady] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [timerKey, setTimerKey] = useState(0); // 타이머를 리셋하기 위한 키
+    const { playersState, turn } = useGameState();
 
-    // turn이 null이 되면 상태 초기화
+    // turn이 0이 되면 상태 초기화
     useEffect(() => {
-        if (turn === null) {
+        if (turn === 0) {
             setFaces(["", "", "", "", "", ""]);
             setDiceReady(false);
             setErrorMessage("");
@@ -53,7 +54,7 @@ export default function DiceBuilder({
             setErrorMessage(
                 `총합이 ${maxSum} 이하가 되도록 모든 면에 1~5 사이의 숫자를 입력하세요`
             );
-        } else if (value === "" || (num >= 0 && num <= 5)) {
+        } else if (value === "" || (num >= 1 && num <= 5)) {
             const updated = [...faces];
             updated[idx] = value === "" ? "" : num;
             setFaces(updated);
@@ -108,7 +109,8 @@ export default function DiceBuilder({
                             className={`
                                 ${styles.diceFace} 
                                 ${styles[`face${idx}`]}
-                                ${diceReady ? styles.diceReady : ""}
+                                ${diceReady && playersState[0]?.color === "blue" ? styles.diceBlue : ""}
+                                ${diceReady && playersState[0]?.color === "red" ? styles.diceRed : ""}
                                 `}
                             disabled={diceReady}
                         />
@@ -117,7 +119,7 @@ export default function DiceBuilder({
                 <div className={styles.diceSummary}>
                     <p>사용한 눈: {sum}</p>
                     <p>남은 눈: {maxSum - sum}</p>
-                    <button onClick={handleSubmit}>완료</button>
+                    <button onClick={handleSubmit} disabled={diceReady}>완료</button>
                 </div>
             </div>
             <div className={styles.errorMessage}>{errorMessage}</div>

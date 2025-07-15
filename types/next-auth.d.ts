@@ -11,6 +11,7 @@ declare module "next-auth" {
       lose: number;
       username: string;
       profilePicture?: string;
+      id: number;
     };
   }
 }
@@ -24,5 +25,6 @@ declare module "next-auth/jwt" {
     lose: number;
     username: string;
     profilePicture?: string;
+    id: number;
   }
 }

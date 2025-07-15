@@ -23,6 +23,9 @@
     position: absolute;
     width: 45px;
     height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-size: 20px;
     border: 2px solid #353535;
@@ -35,8 +38,13 @@
     -moz-appearance: textfield;
 }
 
-.diceReady {
-    background-color: #8CC6DD;
+/* diceReady 상태에서 더 높은 우선순위로 색상 적용 */
+.diceFace.diceBlue {
+    background-color: #8CC6DD !important;
+}
+
+.diceFace.diceRed {
+    background-color: #FB836A !important;
 }
 
 /* Chrome, Safari, Edge */
@@ -84,6 +92,7 @@
     border-radius: 10px;
     cursor: pointer;
     font-size: 14px;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 .errorMessage {
