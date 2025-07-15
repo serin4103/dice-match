@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export default function Home() {
     const [showModal, setShowModal] = useState(false);
@@ -86,19 +87,35 @@ export default function Home() {
                 </button>
             )}
 
-            {/* 로고 */}
-            <h1 style={{ fontSize: 40, fontWeight: 700, marginBottom: 32 }}>
-                Dice Match
-            </h1>
-
             {/* 버튼들 세로 정렬 */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 16 }}>
+
+                <div style={{ marginBottom: -50 }}>
+                    <Image 
+                        src="/characters.png" 
+                        alt="Characters" 
+                        width={250} 
+                        height={180}
+                    />
+                </div>
+
+                {/* 로고 */}
+                <div style={{ marginBottom: 20 }} >
+                    <Image 
+                        src="/header.svg" 
+                        alt="Header" 
+                        width={250} 
+                        height={75}
+                    />
+                </div>
+
                 <button
                     style={{
-                        background: "#F7D9A7",
-                        border: "1px solid #e0e0e0",
+                        background: "#FFCE8E",
+                        width: "200px",
+                        border: "2px solid #353535",
                         borderRadius: 8,
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+                        boxShadow: "0 4px 5px rgba(0,0,0,0.2)",
                         padding: "16px 40px",
                         fontSize: 20,
                         fontWeight: 600,
@@ -111,15 +128,16 @@ export default function Home() {
                 </button>
                 <button
                     style={{
-                        background: "#fff",
-                        border: "1.5px solid #bdbdbd",
+                        background: "#ffffff",
+                        width: "200px",
+                        border: "2px solid #353535",
                         borderRadius: 8,
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                        boxShadow: "0 4px 5px rgba(0,0,0,0.2)",
                         padding: "16px 40px",
                         fontSize: 20,
-                        fontWeight: 500,
+                        fontWeight: 600,
                         cursor: "pointer",
-                        color: "#222",
+                        marginBottom: 8,
                     }}
                     onClick={() => setShowModal(true)}
                 >
@@ -151,7 +169,7 @@ export default function Home() {
                             backgroundColor: "white",
                             padding: 30,
                             borderRadius: 8,
-                            width: 300,
+                            width: 600,
                             zIndex: 1001,
                             boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
                         }}
@@ -173,11 +191,13 @@ export default function Home() {
                         </button>
                         <h2>게임 설명</h2>
                         <p>
-                            Dice Match는 두 명이 번갈아가며 주사위를 굴려 말을 이동시키는 전략 보드게임입니다.
-                            <br />
-                            상대 말을 잡으면 보너스를 받고, 말을 업어서 함께 이동할 수 있습니다.
-                            <br />
-                            끝없이 뒤바뀌는 주사위 대결과 전술을 즐겨보세요!
+                            Dice Match는 직접 만든 주사위를 던져 말을 이동시키는 전략 대전 보드게임입니다. <br />
+                            매 턴 각 플레이어는 눈 합이 18 이하인 주사위를 만들어 동시에 굴립니다. <br />
+                            더 큰 값이 나온 플레이어가 자신의 주사위 눈 합만큼 말을 이동시키고, <br />
+                            상대 플레이어의 말을 잡을 수 있습니다. <br />
+                            상대 말을 잡으면 잡은 말 1개당 다음 턴 주사위 눈 합에 3만큼 보너스를 받고, <br />
+                            내 말을 위에 올려 ‘업기’ 기능으로 함께 이동할 수 있습니다. <br />
+                            끝없이 뒤바뀌는 주사위와 함께 말판 위에서 긴장감 넘치는 한 판 승부를 즐겨보세요! <br />
                         </p>
                     </div>
                 </>

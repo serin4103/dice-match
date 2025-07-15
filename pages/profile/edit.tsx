@@ -1,7 +1,8 @@
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { useRef } from "react";
+import Header from "../../components/Header";
 
 export default function ProfileEdit() {
     const { data: session, status } = useSession();
@@ -20,7 +21,7 @@ export default function ProfileEdit() {
             setUsername(session.user.username ?? "");
             // 프로필 이미지 초기값도 있으면 설정
         }
-    }, [status, session]);
+    }, [status, session, router]);
 
     if (status === "loading") return <div>로딩중...</div>;
     if (!session) return null;
@@ -53,106 +54,166 @@ export default function ProfileEdit() {
     return (
         <div
             style={{
-                maxWidth: 360,
-                margin: "40px auto",
-                padding: 20,
-                fontFamily: "'Noto Sans KR', sans-serif",
-                textAlign: "center",
+                width: "100vw",
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
             }}
         >
-            <h1 style={{ fontWeight: "bold", fontSize: 28, marginBottom: 40 }}>
-                프로필 수정
-            </h1>
-
-            {/* 프로필 사진 + 업로드 버튼 */}
-            <div style={{ position: "relative", margin: "0 auto 24px", width: 100, height: 100 }}>
-                <div
-                    style={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: "50%",
-                        backgroundColor: "#ccc",
-                        backgroundImage: profileImage
-                            ? `url(${URL.createObjectURL(profileImage)})`
-                            : undefined,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        cursor: "pointer",
-                    }}
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                />
-                <button
-                    style={{
-                        position: "absolute",
-                        bottom: 6,
-                        right: 6,
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        background: "#f7d9a7",
-                        border: "none",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        fontSize: 20,
-                        fontWeight: "bold",
-                        color: "#333",
-                        padding: 0,
-                    }}
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    aria-label="프로필 이미지 변경"
-                    type="button"
-                >+</button>
-                <input
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                />
+            <div onClick={() => router.push("/")} style={{ cursor: "pointer" }}>
+                <Header />
             </div>
 
-            {/* 닉네임 입력 */}
-            <div style={{ marginTop: 30, marginBottom: 40 }}>
-                <label
-                    htmlFor="username"
-                    style={{ fontWeight: "600", fontSize: 16, display: "block", marginBottom: 8 }}
-                >
-                    닉네임
-                </label>
-                <input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    style={{
-                        width: "100%",
-                        padding: 8,
-                        fontSize: 16,
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                    }}
-                />
-            </div>
-
-            {/* 저장 버튼 */}
-            <button
-                onClick={handleSave}
+            {/* 메인 콘텐츠 */}
+            <div
                 style={{
-                    backgroundColor: "#d9b372",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: 6,
-                    fontWeight: "600",
-                    fontSize: 16,
-                    cursor: "pointer",
-                    color: "#2e2e2e",
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "20px",
+                    fontFamily: "'Noto Sans KR', sans-serif",
+                    textAlign: "center",
                 }}
             >
-                저장
-            </button>
+                {/* 프로필 사진 + 업로드 버튼 */}
+                <div style={{ position: "relative", margin: "0 auto 60px", width: 120, height: 120 }}>
+                    <div
+                        style={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: "50%",
+                            backgroundImage: profileImage
+                                ? `url(${URL.createObjectURL(profileImage)})`
+                                : session.user.profilePicture
+                                    ? `url(${session.user.profilePicture})`
+                                    : `url(/default_profile_image.png)`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "40px",
+                            border: "2px solid #353535",
+                        }}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                    >
+                    </div>
+                    <button
+                        style={{
+                            position: "absolute",
+                            bottom: 0,
+                            right: 0,
+                            width: 28,
+                            height: 28,
+                            border: "none",
+                            borderRadius: "50%",
+                            background: "#FFCE8E",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            fontSize: 16,
+                            fontWeight: "bold",
+                            color: "#333",
+                            padding: 0,
+                        }}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        aria-label="프로필 이미지 변경"
+                        type="button"
+                    >
+                        +
+                    </button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                    />
+                </div>
+
+                {/* 닉네임 입력 */}
+                <div style={{ marginBottom: "60px", width: "100%", maxWidth: "300px", display: "flex", justifyContent: "center" }}>
+                    <input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="닉네임"
+                        style={{
+                            width: "220px",
+                            height: "50px",
+                            padding: "12px 16px",
+                            fontSize: "16px",
+                            borderRadius: "8px",
+                            border: "2px solid #353535",
+                            textAlign: "center",
+                            fontFamily: "'Noto Sans KR', sans-serif",
+                            backgroundColor: "#fff",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                            boxSizing: "border-box",
+                        }}
+                    />
+                </div>
+
+                {/* 취소/수정 버튼 */}
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "20px",
+                        justifyContent: "center",
+                    }}
+                >
+                    <button
+                        onClick={() => router.push("/profile")}
+                        style={{
+                            backgroundColor: "#FFCE8E",
+                            border: "2px solid #353535",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "100px",
+                            height: "45px",
+                            borderRadius: "8px",
+                            fontWeight: "600",
+                            fontSize: "16px",
+                            cursor: "pointer",
+                            color: "#353535",
+                            fontFamily: "'Noto Sans KR', sans-serif",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                        }}
+                        type="button"
+                    >
+                        취소
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        style={{
+                            backgroundColor: "#FFCE8E",
+                            border: "2px solid #353535",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "100px",
+                            height: "45px",
+                            borderRadius: "8px",
+                            fontWeight: "600",
+                            fontSize: "16px",
+                            cursor: "pointer",
+                            color: "#353535",
+                            fontFamily: "'Noto Sans KR', sans-serif",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                        }}
+                        type="button"
+                    >
+                        수정
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
