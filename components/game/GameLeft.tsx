@@ -188,7 +188,7 @@ export default function GameLeft({
         setTimeout(() => {
             socket.emit("movePawns", {
                 gameId: gameId,
-                animations: animations
+                animation: animations
             });}, 1000); // 1초 후 서버로 전송
 
         // 서버로 애니메이션 데이터 전송

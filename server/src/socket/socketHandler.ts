@@ -73,15 +73,15 @@ export function setupSocketHandlers(io: Server) {
                 socketIds?.forEach((socketId) => {
                     io.to(socketId).emit("gameEnded", {winner: winner});
                 });
+                // 게임 매니저에서 게임 제거
+                gameManager.removeGame(data.gameId);
+                console.log(`🗑️ Game ${data.gameId} deleted`);
             }
 
-            // 게임 매니저에서 게임 제거
-            gameManager.removeGame(data.gameId);
-            console.log(`🗑️ Game ${data.gameId} deleted`);
         });
 
         /*
-        // 연결 해제
+        // 연결 해제    
         socket.on("disconnect", () => {
             console.log(`👋 User disconnected: ${socket.id}`);
             
