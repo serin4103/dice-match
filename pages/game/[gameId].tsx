@@ -17,9 +17,8 @@ export default function Game() {
     
     const { data: session } = useSession();
     const { socket, isConnected } = useSocket();
-    const { playersState, setPlayersState, myId, opponentId } = useGameState();
+    const { setPlayersState, myId, opponentId, setTurn } = useGameState();
     const [readyToMove, setReadyToMove] = useState<boolean>(false);
-    const [turn, setTurn] = useState<number>(0);
 
 
     useEffect(() => {
@@ -31,18 +30,18 @@ export default function Game() {
                 console.log("🎲 Dice rolled:", data);
                 // 주사위 결과 처리
 
-                const diceValuesMap = stringToMap<number, number>(data.diceValues);
+                const diceValuesMap = stringToMap<number, number[]>(data.diceValues);
                 const diceResultsMap = stringToMap<number, number>(data.diceResults);
 
                 setPlayersState((prevState) => [
                     {
                         ...prevState[0],
-                        diceResult: diceResultsMap[myId],
+                        diceResult: diceResultsMap.get(myId) || 0,
                     },
                     {
                         ...prevState[1],
-                        diceValues: diceValuesMap[opponentId],
-                        diceResult: diceResultsMap[opponentId],
+                        diceValues: diceValuesMap.get(opponentId) || [0, 0, 0, 0, 0, 0],
+                        diceResult: diceResultsMap.get(opponentId) || 0,
                     },
                 ]);
 
@@ -112,7 +111,7 @@ export default function Game() {
                 socket.off("newTurnStart", handleNewTurnStart);
             };
         }
-    }, [socket, isConnected, gameId, myId, opponentId, playersState, setPlayersState, setTurn, router]);
+    }, [socket, isConnected, gameId, myId, opponentId, setPlayersState, setTurn, router]);
 
     // gameId가 로드되지 않았거나 유효하지 않은 경우
     if (!gameId || typeof gameId !== 'string') {
@@ -135,9 +134,7 @@ export default function Game() {
                 readyToMove={readyToMove}
                 setReadyToMove={setReadyToMove}
             />
-            <GameRight
-                turn={turn}
-            />
+            <GameRight />
         </div>
     );
 }

@@ -81,6 +81,13 @@ export default function GameLeft({
         
         const initialPosition = (pawnToMove.position === "ready") ? 0 : pawnToMove.position;
 
+        if (initialPosition === 0) {
+            // Ready 상태인 폰을 클릭했을 때
+            const animations = [{ userId: myId, pawnsIndex: [pawnIndex], fromNode: "ready", toNode: 1 }];
+            movePawns([pawnToMove], 1, animations);
+            return;
+        }
+
         // 첫 번째 노드에서 경로 선택 확인
         const initialNode = nodes.find((n) => n.index === initialPosition);
         if (initialNode && initialNode.candidate.length === 0) {
@@ -177,11 +184,15 @@ export default function GameLeft({
             });
         }
 
+        console.log("movePawns animations:", animations);
+        setTimeout(() => {
+            socket.emit("movePawns", {
+                gameId: gameId,
+                animations: animations
+            });}, 1000); // 1초 후 서버로 전송
+
         // 서버로 애니메이션 데이터 전송
-        socket.emit("movePawns", {
-            gameId: gameId,
-            animations: animations
-        });
+        
     }, [nodes, playersState, myId, opponentId, gameId, socket, setPlayersState]);
 
     // ReadyPawns 클릭 시 폰 이동
