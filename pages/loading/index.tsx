@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useSocket } from "../../contexts/SocketContext";
 import { useGameState } from "../../contexts/GameStateContext";
 import { GameStartedEvent, GameState, stringToMap, PlayerState } from "@/types/game";
+import Image from "next/image";
 
 export default function Loading() {
 
@@ -97,34 +98,39 @@ export default function Loading() {
 
     // 세션이 있는 경우의 로딩 화면
     return (
-        <div style={{
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "18px"
-        }}>
-            <h2>게임 대기 중...</h2>
-            <p style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>
-                환영합니다, {session.user?.username || session.user?.email}님!
-            </p>
+        <>
+            <style jsx>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                .loadingImage {
+                    animation: spin 2s ease-in-out infinite;
+                    margin-bottom: 20px;
+                }
+            `}</style>
             
-            <div style={{ marginTop: "20px", textAlign: "center" }}>
-                <p style={{ fontSize: "12px", color: "#999" }}>
-                    소켓 상태: {isConnected ? "✅ 연결됨" : "⏳ 연결 중..."}
-                </p>
-                {socket && (
-                    <p style={{ fontSize: "12px", color: "#999" }}>
-                        소켓 ID: {socket.id}
-                    </p>
-                )}
-                {isConnected && (
-                    <p style={{ fontSize: "12px", color: "#4CAF50", marginTop: "10px" }}>
-                        🎮 상대방을 찾는 중입니다...
-                    </p>
-                )}
+            <div style={{
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "18px"
+            }}>
+                {/* 회전하는 로딩 이미지 */}
+                <div className="loadingImage">
+                    <Image 
+                        src="/loading_image.png" 
+                        alt="Loading..." 
+                        width={80} 
+                        height={80}
+                    />
+                </div>
+                
+                <h2>게임 상대를 찾는 중입니다</h2>
             </div>
-        </div>
+        </>
     );
 }

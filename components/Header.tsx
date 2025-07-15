@@ -8,7 +8,7 @@ const Header: React.FC = () => {
         router.pathname === pathname;
 
     let left = (
-        <div className="left">
+        <div className="left"> 
             <Link href="/">
                 <a className="bold" data-active={isActive("/")}>
           Feed
