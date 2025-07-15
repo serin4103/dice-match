@@ -35,8 +35,13 @@
     -moz-appearance: textfield;
 }
 
-.diceReady {
-    background-color: #8CC6DD;
+/* diceReady 상태에서 더 높은 우선순위로 색상 적용 */
+.diceFace.diceBlue {
+    background-color: #8CC6DD !important;
+}
+
+.diceFace.diceRed {
+    background-color: #FB836A !important;
 }
 
 /* Chrome, Safari, Edge */

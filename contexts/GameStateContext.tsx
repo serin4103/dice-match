@@ -11,6 +11,8 @@ interface GameStateContextType {
     setMyId: React.Dispatch<React.SetStateAction<number>>;
     opponentId: number;
     setOpponentId: React.Dispatch<React.SetStateAction<number>>;
+    turn: number;
+    setTurn: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // Context 생성 (기본값은 undefined)
@@ -27,6 +29,7 @@ export function GameStateProvider({ children }: GameStateProviderProps) {
     const [playersState, setPlayersState] = useState<PlayerState[]>([]);
     const [myId, setMyId] = useState<number>(0);
     const [opponentId, setOpponentId] = useState<number>(0);
+    const [turn, setTurn] = useState<number>(0);
 
     return (
         <GameStateContext.Provider value={{ 
@@ -37,7 +40,9 @@ export function GameStateProvider({ children }: GameStateProviderProps) {
             myId,
             setMyId,
             opponentId,
-            setOpponentId
+            setOpponentId,
+            turn,
+            setTurn
         }}>
             {children}
         </GameStateContext.Provider>

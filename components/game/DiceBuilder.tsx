@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import Timer from "./Timer";
 import { DiceBuilderProps } from "@/types/game";
+import { useGameState } from "../../contexts/GameStateContext";
 import styles from "./DiceBuilder.module.css";
 
 export default function DiceBuilder({
-    turn,
     duration,
     buildDice,
     maxSum,
@@ -20,6 +20,7 @@ export default function DiceBuilder({
     const [diceReady, setDiceReady] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [timerKey, setTimerKey] = useState(0); // 타이머를 리셋하기 위한 키
+    const { playersState, turn } = useGameState();
 
     // turn이 0이 되면 상태 초기화
     useEffect(() => {
@@ -108,7 +109,8 @@ export default function DiceBuilder({
                             className={`
                                 ${styles.diceFace} 
                                 ${styles[`face${idx}`]}
-                                ${diceReady ? styles.diceReady : ""}
+                                ${diceReady && playersState[0]?.color === "blue" ? styles.diceBlue : ""}
+                                ${diceReady && playersState[0]?.color === "red" ? styles.diceRed : ""}
                                 `}
                             disabled={diceReady}
                         />

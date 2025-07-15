@@ -27,12 +27,7 @@ export interface GameLeftProps {
     setReadyToMove: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export interface GameRightProps {
-    turn: number; // 현재 턴을 나타내는 상태
-}
-
 export interface DiceBuilderProps {
-    turn: number; // 현재 턴을 나타내는 상태
     duration: number; // seconds
     maxSum: number;
     buildDice: (faces: number[]) => void;
