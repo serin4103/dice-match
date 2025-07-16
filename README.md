@@ -58,7 +58,7 @@
 - 실시간 게임 진행  
 - 주사위 제작, 말 이동, 업기/잡기 등의 인터랙션 포함
 
-<img width="600" alt="image" src="https://github.com/user-attachments/assets/6be9629a-c16c-404c-be37-90c93458406d" />
+<img width="1862" height="832" alt="image" src="https://github.com/user-attachments/assets/49c36b89-3181-4b35-b684-96319d15892f" />
 
 
 </br>
