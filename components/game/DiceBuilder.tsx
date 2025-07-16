@@ -40,9 +40,10 @@ export default function DiceBuilder({
         if (sum <= maxSum && faces.every((f) => f !== "")) {
             setDiceReady(true);
             buildDice(faces as number[]);
+            setErrorMessage(""); // 에러 메시지 초기화
         } else {
             setErrorMessage(
-                `총합이 ${maxSum} 이하가 되도록 모든 면에 1~5 사이의 숫자를 입력하세요`
+                `총합이 ${maxSum} 이하가 되도록 모든 면에\n1~5 사이의 숫자를 입력하세요`
             );
         }
     }, [faces, sum, buildDice, maxSum]);
@@ -52,7 +53,7 @@ export default function DiceBuilder({
         const newSum = sum + (value === "" ? 0 : num);
         if (newSum > maxSum) {
             setErrorMessage(
-                `총합이 ${maxSum} 이하가 되도록 모든 면에 1~5 사이의 숫자를 입력하세요`
+                `총합이 ${maxSum} 이하가 되도록 모든 면에\n1~5 사이의 숫자를 입력하세요`
             );
         } else if (value === "" || (num >= 1 && num <= 5)) {
             const updated = [...faces];
@@ -86,6 +87,7 @@ export default function DiceBuilder({
 
         buildDice(finalFaces); // 올바른 값으로 호출
         setDiceReady(true); // 주사위가 완성되었음을 표시
+        setErrorMessage(""); // 에러 메시지 초기화
     };
 
     return (

@@ -150,7 +150,6 @@ export default function Game() {
                 height: "100vh",
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "#f8f9fa",
             }}>
                 <div onClick={() => router.push("/")} style={{ cursor: "pointer" }}>
                     <Header />
@@ -195,7 +194,6 @@ export default function Game() {
             height: "100vh",
             display: "flex",
             flexDirection: "column",
-            backgroundColor: "#f8f9fa",
         }}>
             <div>
                 <Header />

@@ -98,6 +98,7 @@
 .errorMessage {
     height: 20px;
     color: #F49E2C;
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 8px;
+    white-space: pre-line;
 }
