@@ -65,6 +65,7 @@ export function setupSocketHandlers(io: Server) {
         });
 
         socket.on("animationEnd", (data: { gameId: string, userId: number}) => {
+            if(!gameManager.checkAnimationEnd(data.gameId)) return;
             const winner = gameManager.updAnimationEnd(data.gameId, data.userId);
             const socketIds = gameManager.getSocketId(data.gameId);
             if(!winner){
