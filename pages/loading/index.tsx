@@ -1,6 +1,6 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSocket } from "../../contexts/SocketContext";
 import { useGameState } from "../../contexts/GameStateContext";
 import { GameStartedEvent, GameState, stringToMap, PlayerState } from "@/types/game";
@@ -13,6 +13,8 @@ export default function Loading() {
     const router = useRouter();
     const { socket, isConnected } = useSocket();
     const hasJoinedRef = useRef(false);
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [showCountdown, setShowCountdown] = useState(false);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -60,9 +62,23 @@ export default function Loading() {
                     setPlayersState(newPlayersState);
                     console.log("Updated players state:", newPlayersState);
 
-                    setTimeout(() => {
-                        router.push(`/game/${gameState.gameId}`);
-                    }, 1000); // 1초 후 게임 페이지로 이동
+                    // 카운트다운 시작
+                    setShowCountdown(true);
+                    setCountdown(3);
+                    
+                    const countdownInterval = setInterval(() => {
+                        setCountdown((prev) => {
+                            if (prev === null || prev <= 1) {
+                                clearInterval(countdownInterval);
+                                // 카운트다운 완료 후 게임 페이지로 이동
+                                setTimeout(() => {
+                                    router.push(`/game/${gameState.gameId}`);
+                                }, 500);
+                                return null;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
                 }
             }
 
@@ -96,6 +112,35 @@ export default function Loading() {
         return null;
     }
 
+    // 카운트다운 화면
+    if (showCountdown) {
+        return (
+            <>
+                <style jsx>{`
+                    .countdownNumber {
+                        font-size: 100px;
+                        font-weight: bold;
+                        color: #ffce8e;
+                        margin-bottom: 20px;
+                    }
+                `}</style>
+                
+                <div style={{
+                    height: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontFamily: "'Noto Sans KR', sans-serif"
+                }}>
+                    <div className="countdownNumber">
+                        {countdown || "시작!"}
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     // 세션이 있는 경우의 로딩 화면
     return (
         <>
@@ -117,7 +162,8 @@ export default function Loading() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "18px"
+                fontSize: "18px",
+                fontFamily: "'Noto Sans KR', sans-serif"
             }}>
                 {/* 회전하는 로딩 이미지 */}
                 <div className="loadingImage">
@@ -129,7 +175,7 @@ export default function Loading() {
                     />
                 </div>
                 
-                <h2>게임 상대를 찾는 중입니다</h2>
+                <h2 style={{ color: "#353535" }}>게임 상대를 찾는 중입니다</h2>
             </div>
         </>
     );

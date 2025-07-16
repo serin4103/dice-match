@@ -16,6 +16,7 @@ export class GameManager {
     private activeGames: Map<string, GameState> = new Map(); // (gameId, game)
     private socketIdMap: Map<number, string> = new Map(); // (userId, socketId)
     private userIdMap: Map<string, number> = new Map(); // (socketId, userId)
+    private gameIdSet: Set<string> = new Set(); // (gameId)
 
     prisma = new PrismaClient();
 
@@ -217,6 +218,16 @@ export class GameManager {
         game.playersState = mapToString<number, PlayerState>(playersState);
     }
 
+
+    checkAnimationEnd(gameId: string) : boolean {
+        if(!this.gameIdSet.has(gameId)){
+            this.gameIdSet.add(gameId);
+            return false;
+        } else {
+            this.gameIdSet.delete(gameId);
+            return true;
+        }
+    }
     updAnimationEnd( gameId: string, userId: number) : null | number {
         const game = this.getGameById(gameId);
         if(!game) throw new Error("updAnimationEnd: game does not exist");
