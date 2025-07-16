@@ -34,8 +34,7 @@
 
 - Google 소셜 로그인 기능 제공
 
-<img width="1753" height="847" alt="lobby" src="https://github.com/user-attachments/assets/2742d286-d393-4c35-94e9-e64ba53b45db" />
-![메인 페이지](./public/header.svg)
+<img width="600" alt="lobby" src="https://github.com/user-attachments/assets/2742d286-d393-4c35-94e9-e64ba53b45db" />
 
 
 ### 🔸 프로필 페이지
@@ -43,16 +42,23 @@
 - 승/패 전적 확인  
 - 프로필 정보 수정
 
+<img width="200" alt="image" src="https://github.com/user-attachments/assets/74f9102f-0919-4d53-8eb5-61ccf99574da" />
+
 
 ### 🔸 로딩 페이지
 
-- 상대방을 기다리는 동안 **귀여운 주사위 애니메이션** 표시  
+- 상대방을 기다리는 동안 **귀여운 주사위 애니메이션** 표시
+
+<img width="706" height="326" alt="image" src="https://github.com/user-attachments/assets/38d10691-fa03-433e-b022-10f74ac5e42c" />
 
 
 ### 🔸 게임 페이지
 
 - 실시간 게임 진행  
-- 주사위 제작, 말 이동, 업기/잡기 등의 인터랙션 포함  
+- 주사위 제작, 말 이동, 업기/잡기 등의 인터랙션 포함
+
+<img width="707" height="328" alt="image" src="https://github.com/user-attachments/assets/6be9629a-c16c-404c-be37-90c93458406d" />
+
 
 </br>
 
