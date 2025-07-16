@@ -1,4 +1,4 @@
-![메인 페이지](./public/header.svg)
+
 
 > 직접 만든 주사위를 굴려 윷놀이판에서 말을 움직이세요!
 
@@ -32,7 +32,10 @@
 
 ### 🔸 메인 페이지
 
-- Google 소셜 로그인 기능 제공  
+- Google 소셜 로그인 기능 제공
+
+<img width="1753" height="847" alt="lobby" src="https://github.com/user-attachments/assets/2742d286-d393-4c35-94e9-e64ba53b45db" />
+![메인 페이지](./public/header.svg)
 
 
 ### 🔸 프로필 페이지
