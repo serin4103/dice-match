@@ -23,7 +23,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const connectSocket = () => {
         if (!socket && status === 'authenticated' && session) {
             console.log('🔗 Creating new socket connection...');
-            const newSocket = io('http://localhost:4000');
+            const newSocket = io(process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:4000");
 
             newSocket.on('connect', () => {
                 console.log('🔗 Socket connected:', newSocket.id);

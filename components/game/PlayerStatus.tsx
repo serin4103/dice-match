@@ -17,6 +17,12 @@ export default function PlayerStatus({ playerIndex }: StatusProps) {
     const name = playersState[playerIndex].name;
     const profilePic = playersState[playerIndex].profilePic;
     console.log("profilePic: ", profilePic);
+    
+    // 서버에서 받은 profilePic 경로를 완전한 URL로 변환
+    const profileImageUrl = profilePic 
+        ? `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:4000"}${profilePic}`
+        : null;
+    
     const diceResult = playersState[playerIndex].diceResult;
     const color = playersState[playerIndex].color;
     const diceValues = playersState[playerIndex].diceValues || [];
@@ -56,8 +62,8 @@ export default function PlayerStatus({ playerIndex }: StatusProps) {
                     <div
                         className={styles.profilePic}
                         style={{
-                            backgroundImage: profilePic
-                                ? `url(${profilePic})`
+                            backgroundImage: profileImageUrl
+                                ? `url(${profileImageUrl})`
                                 : `url(/default_profile_image.png)`,
                         }}
                     />

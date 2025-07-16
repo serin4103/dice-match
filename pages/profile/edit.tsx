@@ -87,7 +87,7 @@ export default function ProfileEdit() {
                             backgroundImage: profileImage
                                 ? `url(${URL.createObjectURL(profileImage)})`
                                 : session.user.profilePicture
-                                    ? `url(${session.user.profilePicture})`
+                                    ? `url(${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:4000"}${session.user.profilePicture})`
                                     : `url(/default_profile_image.png)`,
                             backgroundSize: "cover",
                             backgroundPosition: "center",

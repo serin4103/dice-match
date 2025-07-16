@@ -1,11 +1,13 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Header from "../components/Header";
 
 export default function Profile() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [profileData, setProfileData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -13,11 +15,42 @@ export default function Profile() {
         }
     }, [status, router]);
 
-    if (status === "loading") return <div>로딩중...</div>;
+    useEffect(() => {
+        const fetchProfileData = async () => {
+            if (session?.user?.email) {
+                try {
+                    const response = await fetch(`/api/profile/get?email=${session.user.email}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setProfileData(data);
+                    }
+                } catch (error) {
+                    console.error("프로필 데이터 가져오기 실패:", error);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        if (session?.user?.email) {
+            fetchProfileData();
+        }
+    }, [session?.user?.email]);
+
+    if (status === "loading" || loading) return <div>로딩중...</div>;
     if (!session) return null;
-    const { email, username, win, lose, profilePicture } = session.user; // image도 나중에 추가!
+    
+    const { email, username, win, lose } = session.user;
+    const profilePicture = profileData?.profilePicture || null;
+    
+    // 서버에서 받은 profilePicture 경로를 완전한 URL로 변환
+    const profileImageUrl = profilePicture 
+        ? `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:4000"}${profilePicture}`
+        : null;
+    
     console.log("session: ", session);
     console.log("profilePicture: ", profilePicture);
+    console.log("profileImageUrl: ", profileImageUrl);
     const total = win + lose;
 
     return (
@@ -53,8 +86,8 @@ export default function Profile() {
                         height: "120px",
                         margin: "0 auto 60px",
                         borderRadius: "50%",
-                        backgroundImage: profilePicture
-                            ? `url(${profilePicture})`
+                        backgroundImage: profileImageUrl
+                            ? `url(${profileImageUrl})`
                             : `url(/default_profile_image.png)`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",

@@ -1,9 +1,20 @@
 import { getServerSession } from "next-auth";
-import { PrismaClient } from "@prisma/client";
 import { authOptions } from "../auth/[...nextauth]";
-import formidable from "formidable";
-import fs from "fs";
-import path from "path";
+import multer from 'multer';
+import { NextApiRequest, NextApiResponse } from 'next';
+
+// multer 타입 확장
+interface MulterRequest extends NextApiRequest {
+    file?: Express.Multer.File;
+}
+
+// multer 설정
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB 제한
+    },
+});
 
 export const config = {
     api: {
@@ -11,46 +22,61 @@ export const config = {
     },
 };
 
-const prisma = new PrismaClient();
+// multer 미들웨어를 Promise로 래핑
+function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: any) {
+    return new Promise((resolve, reject) => {
+        fn(req, res, (result: any) => {
+            if (result instanceof Error) {
+                return reject(result);
+            }
+            return resolve(result);
+        });
+    });
+}
 
-export default async function handler(req, res) {
+export default async function handler(req: MulterRequest, res: NextApiResponse) {
     if (req.method !== "POST") return res.status(405).end();
 
     const session = await getServerSession(req, res, authOptions);
     if (!session) return res.status(401).json({ error: "로그인이 필요합니다." });
-    //console.log("session: ", session);
 
-    const form = formidable();
-    form.parse(req, async (err, fields, files) => {
-        if (err) return res.status(400).json({ error: "폼 파싱 오류" });
+    try {
+        // multer 미들웨어 실행
+        await runMiddleware(req, res, upload.single('image'));
 
-        const username = Array.isArray(fields.username)
-            ? fields.username[0]
-            : fields.username; // 텍스트 필드
-        const profileImage = files.image; // 파일 필드 (input name="image")
-        console.log("proflieImage: ", profileImage);
-        if (!username) return res.status(400).json({ error: "닉네임이 필요합니다." });
-        let profilePicturePath;
-        if (profileImage) {
-            const imageFile = Array.isArray(profileImage) ? profileImage[0] : profileImage;
-            const newFilename = Date.now() + "_" + imageFile.newFilename; // 중복 방지
-            const oldPath = imageFile.filepath; // 임시 저장 경로
-            const newPath = path.join(process.cwd(), "public", "uploads", newFilename);
-
-            // 파일 이동
-            fs.renameSync(oldPath, newPath);
-
-            profilePicturePath = "/uploads/" + newFilename;
+        // 새로운 서버 API 호출
+        const serverUrl = process.env.SERVER_URL || "http://localhost:4000";
+        const formData = new FormData();
+        
+        // 세션에서 이메일 추가
+        formData.append('email', session.user.email);
+        
+        // 클라이언트에서 보낸 데이터 처리 (multer로 파싱된 데이터)
+        const { username } = req.body;
+        if (username) {
+            formData.append('username', username);
         }
-        console.log("profilePicturePath: ", profilePicturePath);
-        await prisma.user.update({
-            where: { email: session.user.email },
-            data: {
-                username,
-                ...(profilePicturePath && { profilePicture: profilePicturePath }), // 이미지 경로 추가
-            },
-        });
-    });
 
-    return res.status(200).json({ message: "프로필 업데이트 성공" });
+        // 파일이 있는 경우 처리
+        if (req.file) {
+            const blob = new Blob([req.file.buffer], { type: req.file.mimetype });
+            formData.append('image', blob, req.file.originalname);
+        }
+
+        const response = await fetch(`${serverUrl}/user/profile/update`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            return res.status(response.status).json(errorData);
+        }
+
+        const result = await response.json();
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        return res.status(500).json({ error: "서버 오류가 발생했습니다." });
+    }
 }

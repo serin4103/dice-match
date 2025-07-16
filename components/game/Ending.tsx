@@ -27,11 +27,11 @@ export default function Ending({ winner }: EndingProps) {
     const isMyWin = winner === myId;
     const winnerName = winnerPlayer.name;
     const winnerProfilePic = winnerPlayer.profilePic 
-        ? `${winnerPlayer.profilePic}` 
+        ? `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:4000"}${winnerPlayer.profilePic}` 
         : "/default_profile_image.png";
     const loserName = loserPlayer.name;
     const loserProfilePic = loserPlayer.profilePic 
-        ? `${loserPlayer.profilePic}` 
+        ? `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:4000"}${loserPlayer.profilePic}` 
         : "/default_profile_image.png";
 
     return (

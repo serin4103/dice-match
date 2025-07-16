@@ -1,8 +1,5 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
 
 export const authOptions = {
     providers: [
@@ -16,15 +13,45 @@ export const authOptions = {
             if (user) {
                 token.email = user.email;
             }
-            const existingUser = await prisma.user.findUnique({
-                where: { email: token.email! },
-            });
-            token.isRegistered = !!existingUser?.username;
-            token.win = existingUser?.win ?? 0;
-            token.lose = existingUser?.lose ?? 0;
-            token.username = existingUser?.username;
-            token.profilePicture = existingUser?.profilePicture;
-            token.id = existingUser?.id;
+            
+            try {
+                // 새로운 서버 API 호출
+                const serverUrl = process.env.NEXT_PUBLIC_SERVER_UR || "http://localhost:4000";
+                const response = await fetch(`${serverUrl}/user/${token.email}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const existingUser = await response.json();
+                    token.isRegistered = existingUser.isRegistered;
+                    token.win = existingUser.win ?? 0;
+                    token.lose = existingUser.lose ?? 0;
+                    token.username = existingUser.username;
+                    token.profilePicture = existingUser.profilePicture;
+                    token.id = existingUser.id;
+                } else {
+                    // 서버 오류 시 기본값 설정
+                    token.isRegistered = false;
+                    token.win = 0;
+                    token.lose = 0;
+                    token.username = null;
+                    token.profilePicture = null;
+                    token.id = null;
+                }
+            } catch (error) {
+                console.error('Error fetching user from server:', error);
+                // 오류 시 기본값 설정
+                token.isRegistered = false;
+                token.win = 0;
+                token.lose = 0;
+                token.username = null;
+                token.profilePicture = null;
+                token.id = null;
+            }
+            
             return token;
         },
         async session({ session, token }) {
