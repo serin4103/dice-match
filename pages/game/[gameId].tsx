@@ -1,10 +1,10 @@
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { DiceRolledEvent, PawnsMovedEvent, PawnPosition, stringToMap } from "@/types/game";
 import Ending from "@/components/game/Ending";
 import GameLeft from "@/components/game/GameLeft";
 import GameRight from "@/components/game/GameRight";
+import Header from "@/components/Header";
 import { useSocket } from "../../contexts/SocketContext";
 import { useGameState } from "../../contexts/GameStateContext";
 import styles from "./Game.module.css";
@@ -16,7 +16,6 @@ export default function Game() {
     // gameId를 안전하게 문자열로 변환
     const gameId = Array.isArray(rawGameId) ? rawGameId[0] : rawGameId;
     
-    const { data: session } = useSession();
     const { socket, isConnected } = useSocket();
     const { setPlayersState, myId, opponentId, setTurn } = useGameState();
     const [readyToMove, setReadyToMove] = useState<boolean>(false);
@@ -147,13 +146,25 @@ export default function Game() {
     if (!gameId || typeof gameId !== 'string') {
         return (
             <div style={{
+                width: "100vw",
                 height: "100vh",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "18px"
+                flexDirection: "column",
+                backgroundColor: "#f8f9fa",
             }}>
-                게임 정보를 불러오는 중...
+                <div onClick={() => router.push("/")} style={{ cursor: "pointer" }}>
+                    <Header />
+                </div>
+                <div style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "18px",
+                    fontFamily: "'Noto Sans KR', sans-serif",
+                }}>
+                    게임 정보를 불러오는 중...
+                </div>
             </div>
         );
     }
@@ -161,19 +172,41 @@ export default function Game() {
     // 게임이 끝난 경우
     if (winner !== 0) {
         return (
-            <div className={styles.gameContainer}>
-                <Ending winner={winner} />
+            <div style={{
+                width: "100vw",
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "#f8f9fa",
+            }}>
+                <div onClick={() => router.push("/")} style={{ cursor: "pointer" }}>
+                    <Header />
+                </div>
+                <div className={styles.gameContainer}>
+                    <Ending winner={winner} />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className={styles.gameContainer}>
-            <GameLeft
-                readyToMove={readyToMove}
-                setReadyToMove={setReadyToMove}
-            />
-            <GameRight />
+        <div style={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            backgroundColor: "#f8f9fa",
+        }}>
+            <div>
+                <Header />
+            </div>
+            <div className={styles.gameContainer}>
+                <GameLeft
+                    readyToMove={readyToMove}
+                    setReadyToMove={setReadyToMove}
+                />
+                <GameRight />
+            </div>
         </div>
     );
 }

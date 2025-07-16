@@ -15,8 +15,8 @@ export default function PlayerStatus({ playerIndex }: StatusProps) {
     }
 
     const name = playersState[playerIndex].name;
-    const profilePic =
-        playersState[playerIndex].profilePic || "defaultProfilePic.png"; // 기본 프로필 사진 설정
+    const profilePic = playersState[playerIndex].profilePic;
+    console.log("profilePic: ", profilePic);
     const diceResult = playersState[playerIndex].diceResult;
     const color = playersState[playerIndex].color;
     const diceValues = playersState[playerIndex].diceValues || [];
@@ -58,7 +58,7 @@ export default function PlayerStatus({ playerIndex }: StatusProps) {
                         style={{
                             backgroundImage: profilePic
                                 ? `url(${profilePic})`
-                                : undefined,
+                                : `url(/default_profile_image.png)`,
                         }}
                     />
                     <div className={styles.playerName}>{name}</div>
