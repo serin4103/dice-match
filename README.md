@@ -70,7 +70,7 @@
 - **MySQL**  
   사용자 및 게임 정보 저장, 트랜잭션 처리
 
-  - **Prisma**  
+- **Prisma**  
   MySQL 데이터 접근 및 관리
 
 ### 🔄 Real-time Communication
