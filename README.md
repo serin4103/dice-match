@@ -63,12 +63,15 @@
 ### 🧠 Back-end
 
 - **Node.js**  
-  REST API 구축, JWT 인증 처리, 비동기 로직 구현
+  실시간 서버 구현(Socket.IO 연동)
 
 ### 🗃️ Database
 
 - **MySQL**  
   사용자 및 게임 정보 저장, 트랜잭션 처리
+
+  - **Prisma**  
+  MySQL 데이터 접근 및 관리
 
 ### 🔄 Real-time Communication
 
